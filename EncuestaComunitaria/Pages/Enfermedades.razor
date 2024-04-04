@@ -1,0 +1,73 @@
+﻿@page "/enfermedades"
+@page "/enfermedades/{id:int}"
+
+@using Radzen;
+@using Radzen.Blazor;
+@inject EncuestaComunitaria.Services.IPatientService PatientService
+@inject NavigationManager NavigationManager
+
+<h3>Enfermedades</h3>
+
+@if (enfermedades.Count == 0)
+{
+    <p>No existe registro de enfermedades</p>
+}
+else
+{
+    <table class="table custom-table">
+        <thead class="custom-table-header">
+            <tr>
+                <th>Nombre enfermedad</th>
+                <th>¿Desde cuándo?</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var enfermedad in enfermedades)
+            {
+                <tr>
+                    <td>@enfermedad.Nombre</td>
+                    <td>@enfermedad.DesdeCuando</td>
+                    <td>
+                        <button @onclick="(() => ShowEnfermedad(enfermedad.Id))" class="btn btn-primary">Editar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center" style="background-color: #20c997">
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(CreateEnfermedad) Text="Dar de alta enfermedad" Style="width:200px" TextAlign="TextAlign.Center" />
+
+        </div>
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Cancel) Text="Cancelar" Style="width:200px" TextAlign="TextAlign.Center" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    public List<EncuestaComunitaria.Models.Enfermedades> enfermedades { get; set; } = new List<EncuestaComunitaria.Models.Enfermedades>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        enfermedades = await PatientService.GetEnfermedadesAsync(Id.Value);
+    }
+
+    void CreateEnfermedad()
+    {
+        NavigationManager.NavigateTo($"enfermedad/{Id.Value}");
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/PatientManagement");
+    }
+    void ShowEnfermedad(int id)
+    {
+        NavigationManager.NavigateTo($"enfermedad/{Id.Value}/{id}");
+    }
+}

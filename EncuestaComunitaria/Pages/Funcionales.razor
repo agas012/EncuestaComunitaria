@@ -1,0 +1,71 @@
+﻿@page "/funcionales"
+@page "/funcionales/{id:int}"
+
+@using Radzen;
+@using Radzen.Blazor;
+@inject EncuestaComunitaria.Services.IPatientService PatientService
+@inject NavigationManager NavigationManager
+
+<h3>Funcionales</h3>
+
+@if (funcionales.Count == 0)
+{
+    <p>No existe registro de pruebas funcionales</p>
+}
+else
+{
+    <table class="table custom-table">
+        <thead class="custom-table-header">
+            <tr>
+                <th>ID funcional</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var funcional in funcionales)
+            {
+                <tr>
+                    <td>@funcional.Id</td>
+                    <td>
+                        <button @onclick="(() => ShowFuncional(funcional.Id))" class="btn btn-primary">Editar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center" style="background-color: #20c997">
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(CreateFuncional) Text="Dar de alta pruebas funcionales" Style="width:200px" TextAlign="TextAlign.Center" />
+
+        </div>
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Cancel) Text="Cancelar" Style="width:200px" TextAlign="TextAlign.Center" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    public List<EncuestaComunitaria.Models.Funcionales> funcionales { get; set; } = new List<EncuestaComunitaria.Models.Funcionales>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        funcionales = await PatientService.GetFuncionalesAsync(Id.Value);
+    }
+
+    void CreateFuncional()
+    {
+        NavigationManager.NavigateTo($"funcional/{Id.Value}");
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/PatientManagement");
+    }
+    void ShowFuncional(int id)
+    {
+        NavigationManager.NavigateTo($"funcional/{Id.Value}/{id}");
+    }
+}

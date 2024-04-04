@@ -1,0 +1,252 @@
+﻿@page "/Funcional/{id:int}"
+@page "/Funcional/{id:int}/{Idp:int}"
+
+@inject NavigationManager NavigationManager
+@inject EncuestaComunitaria.Services.IPatientService PatientService
+@inject IJSRuntime JSRuntime
+@using Radzen;
+@using Radzen.Blazor;
+
+<style>
+    .fixed-button-borrar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 10px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-cancelar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 150px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-guardar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 300px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+</style>
+
+<h3>Alta de prueba funcional</h3>
+@if (Idp == null)
+{
+    <PageTitle>Dar de alta una prueba funcional</PageTitle>
+    <h3>Dar de alta una prueba funcional</h3>
+}
+else
+{
+    <PageTitle>Editar una prueba funcional </PageTitle>
+}
+
+<RadzenTemplateForm Data="@SinglePatient" TItem="EncuestaComunitaria.Models.PatientModel" Submit="@OnSubmit">
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
+                <RadzenButton Class="fixed-button-cancelar " ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancelar" Click="@Cancel" />
+                <RadzenButton Class="fixed-button-borrar" ButtonStyle="ButtonStyle.Warning" Icon="delete" style="display: inline-block; margin-left: 10px;" Text="Borrar" Click="@Delete" />
+                <RadzenButton Class="fixed-button-guardar" ButtonStyle="ButtonStyle.Info" Icon="save" style="display: inline-block; margin-left: 10px;" Text="Guardar" Click="@Guardar" />
+            </div>
+        </div>
+    </div>
+    <RadzenCard>
+        <RadzenLabel Text="Peso del individuo" Size="H3" class="rz-card-title" />
+        <RadzenNumeric TValue="float" @bind-Value="funcional.Peso" Name="BancoAltura" Change=@ConsOxigeno />
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="M1. Dinamometría de mano"/>
+        </RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="6 segundos apretando. Escriba el número" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.Dinatest_1" Name="Dinatest_1"  Change=@Dinachange/>
+        </RadzenCard>
+        <RadzenLabel Text="Descanso de 30 segundos"/>
+        <RadzenCard>
+            <RadzenLabel Text="6 segundos apretando. Escriba el número" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.Dinatest_2" Name="Dinatest_2" Change=@Dinachange/>
+        </RadzenCard>
+         <RadzenLabel Text="Descanso de 30 segundos"/>
+        <RadzenCard>
+            <RadzenLabel Text="6 segundos apretando. Escriba el número" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.Dinatest_3" Name="Dinatest_3" Change=@Dinachange/>
+        </RadzenCard>        
+         <RadzenCard>
+            <RadzenLabel Text="PROMEDIO DE LAS 3 PRUEBAS"/>
+            <RadzenNumeric @bind-Value="funcional.Dinatest_A" Name="Dinatest_A" ReadOnly="true"/>
+         </RadzenCard>
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="M2. Siéntate y alcanza "/>
+        </RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="¿Toca la punta de los pies?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@funcional.TocaPiesId"
+                            Data="@funcional.TocaPies"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        
+            <RadzenLabel Text="Escriba la distancia entre la punta del dedo medio y la punta del dedo del pie" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="funcional.TocaPiesDistDedo" Name="TocaPiesDistDedo" />
+            <RadzenLabel Text="Alcanza más allá de la punta de los pies. Escriba la distancia" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="funcional.TocaPiesDistMas" Name="TocaPiesDistMas" />
+        </RadzenCard>
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="M3. Prueba de 6 metros"/>
+        </RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="Cadencia. Escribe el número de pasos dados de cono a cono (SOLO de ida)" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.Cadencia" Name="Cadencia" Change=@Cadenciachange />
+
+            <RadzenLabel Text="Longitud del paso: Cadencia/6m" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="funcional.LongitudPaso" Name="LongitudPaso" ReadOnly="true" />
+
+            <RadzenLabel Text="Tiempo que tardó en ir de ida desde un cono hasta el otro (6m)" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.TempMarcha" Name="TempMarcha" Change=@Tempchange />
+
+            <RadzenLabel Text="Velocidad de la marcha: 6m/tiempo que tardó en ir de ida desde un cono hasta el otro (6m)" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="funcional.VelMarcha" Name="VelMarcha" ReadOnly="true" />
+        </RadzenCard>
+    </RadzenCard>
+    <RadzenCard>
+        <RadzenCard>
+            <RadzenLabel Text="M4. Los evaluadores contabilizarán los ciclos (“sube – sube, baja – baja”) que realice, y cronometrarán el tiempo, indicando cuándo iniciar, y cuando debe detenerse. Antes de iniciar, se registrará la FC con un oxímetro de pulso, y al término del minuto se registrará nuevamente."/>
+        </RadzenCard>
+        <RadzenCard>
+            <p>
+            <RadzenLabel Text="Altura del banco" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.BancoAltura" Name="BancoAltura" Change=@ConsOxigeno />
+            </p>
+            <p>
+            <RadzenLabel Text="Numero de ciclos completados" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.NumCiclos" Name="NumCiclos" Change=@ConsOxigeno />
+            </p>
+            <RadzenLabel Text="FC inicial" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.FC_I" Name="FC_I" Change=@ConsOxigeno />
+            <p>
+            <RadzenLabel Text="FC final" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.FC_O" Name="FC_O" Change=@ConsOxigeno />
+            </p>
+            <p>
+            <RadzenLabel Text="VO2= Altura banco (m) x ciclos*min x 1.8 x 1.33 + (ciclos*min x 0.35)" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float"  @bind-Value="funcional.VO2" Name="VO2" ReadOnly="true" />
+            </p>
+            <p>
+            <RadzenLabel Text="Potencia mecánica (kgm) = Peso corporal (kg) x altura escalón (metros) x ciclos minuto x 1.33" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.PotenciaMecanica" Name="PotenciaMecanica" ReadOnly="true" />
+            </p>
+            <p>
+            <RadzenLabel Text="Trabajo = Peso corporal (kg) x 9.81 x altura escalón (m) x ciclos por min" Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float" @bind-Value="funcional.Trabajo" Name="Trabajo" ReadOnly="true" Change=@ConsOxigeno />
+            </p>
+            <p>
+            <RadzenLabel Text="Julios = trabajo / 60 s " Size="H3" class="rz-card-title" />
+            <RadzenNumeric TValue="float"  @bind-Value="funcional.Julios" Name="Julios" ReadOnly="true" />
+            </p>
+        </RadzenCard>
+    </RadzenCard>
+    <RadzenCard>
+            <RadzenLabel Text="Di cuánto dolor has tenido" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@funcional.CuantoDolorId"
+                            Data="@funcional.CuantoDolor"
+                            Style="width: 100%">
+            </RadzenDropDown>
+    </RadzenCard>
+    <button type="submit" class="btn btn-primary">@btnText</button>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    [Parameter]
+    public int? Idp { get; set; }
+
+    EncuestaComunitaria.Models.PatientModel SinglePatient { get; set; } = new EncuestaComunitaria.Models.PatientModel();
+    EncuestaComunitaria.Models.Funcionales funcional { get; set; } = new EncuestaComunitaria.Models.Funcionales();
+
+    string btnText = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Idp != null)
+        {
+            funcional = await PatientService.GetFuncionalesByIdAsync(Idp.Value);
+            SinglePatient = await PatientService.GetPatientByIdAsync(Id.Value);
+            btnText = "Actualizar";
+        }
+        else
+        {
+            SinglePatient = await PatientService.GetPatientByIdAsync(Id.Value);
+            btnText = "Dar de alta enfermedad";
+        }
+    }
+
+    async Task OnSubmit()
+    {
+        if (Idp == null)
+        {
+            funcional.PatientId = Id.Value;
+            await PatientService.AddFuncionalesAsync(funcional);
+        }
+        else
+        {
+            await PatientService.UpdateFuncionalesAsync(funcional);
+        }  
+        NavigationManager.NavigateTo($"funcionales/{SinglePatient.Id}");
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"funcionales/{SinglePatient.Id}");
+    }
+
+    async void Delete()
+    {
+        if (Idp != null)
+        {
+            await PatientService.DeleteFuncionalesAsync(Id.Value, Idp.Value);
+            NavigationManager.NavigateTo($"funcionales/{SinglePatient.Id}");
+        }
+    }
+    public async void Guardar()
+    {
+        if (Idp == null)
+        {
+            funcional.PatientId = Id.Value;
+            funcional.Id = await PatientService.AddFuncionalesAsync(funcional);
+            Idp = funcional.Id;
+        }
+        else
+        {
+            await PatientService.UpdateFuncionalesAsync(funcional);
+        }
+    }
+    void Dinachange(float value)
+    {
+        funcional.Dinatest_A = (funcional.Dinatest_1 + funcional.Dinatest_2 + funcional.Dinatest_3) / 3;
+    }
+    void Tempchange(float value)
+    {
+        funcional.VelMarcha = 6 / funcional.TempMarcha;
+    }
+    void Cadenciachange(float value)
+        {
+            funcional.LongitudPaso = funcional.Cadencia / 6;
+        }
+    void ConsOxigeno(float value)
+    {
+        funcional.VO2 = funcional.BancoAltura * funcional.NumCiclos * 1.8f * 1.33f + (funcional.NumCiclos * 0.35f);
+        funcional.PotenciaMecanica = funcional.Peso * funcional.BancoAltura * funcional.NumCiclos * 1.33f;
+        funcional.Trabajo = funcional.Peso * 9.81f * funcional.BancoAltura * funcional.NumCiclos;
+        funcional.Julios = funcional.Trabajo / 60;
+    }
+}

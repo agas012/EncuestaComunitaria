@@ -1,0 +1,129 @@
+﻿@page "/PatientManagement"
+@using System;
+@using System.Collections.Generic;
+@using System.Linq;
+@using System.Threading.Tasks;
+@using Microsoft.JSInterop;
+@using Microsoft.AspNetCore.Components;
+@using Microsoft.AspNetCore.Components.Web;
+@using Radzen;
+@using Radzen.Blazor;
+@inject EncuestaComunitaria.Services.IPatientService PatientService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+
+<h3>Manejo de individuos</h3>
+<div id="app"></div>
+    
+@if (Patients.Count == 0)
+{
+    <p>No existe registro de pacientes</p>
+}
+else
+{
+<table class="table custom-table">
+    <thead class="custom-table-header">
+        <tr>
+            <th>Nombre Encuestador</th>
+            <th>Nombre</th>
+            <th>Apellido paterno</th>
+            <th>Apellido materno</th>
+            <th>Fecha captura</th>
+            <th>Editar cuestionario</th>
+            <th>Agregar enfermedades</th>
+            <th>Agregar pruebas funcionales</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var patient in Patients)
+        {
+            <tr>
+                <td>@patient.NombreEncuestador</td>
+                <td>@patient.Name</td>
+                <td>@patient.ApellidoP</td>
+                <td>@patient.ApellidoM</td>
+                <td>@patient.FechaCaptura.ToShortDateString()</td>
+                <td>
+                    <button @onclick="(() => ShowPatient(patient.Id))" class="btn btn-primary">Editar</button>
+                </td>
+                <td>
+                    <button @onclick="(() => ShowEnfermedades(patient.Id))" class="btn btn-primary">Editar</button>
+                </td>
+                <td>
+                    <button @onclick="(() => ShowFuncionales(patient.Id))" class="btn btn-primary">Editar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center" style="background-color: #20c997">
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(CreatePatient) Text="Crear nuevo paciente" Style="width:200px" TextAlign="TextAlign.Center" />
+
+        </div>
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Cancel) Text="Cancelar" Style="width:200px" TextAlign="TextAlign.Center" />
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="row justify-content-center" style="background-color: #20c997">
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Guardarbase) Text="Guardar Base" Style="width:200px" TextAlign="TextAlign.Center" />
+
+        </div>
+        <div class="col-lg-4 col-xl-3 p-3">
+            <RadzenButton Icon="list" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Filled" Size="ButtonSize.Medium" Click=@(Cargarbase) Text="Cargar Base" Style="width:200px" TextAlign="TextAlign.Center" />
+
+        </div>
+    </div>
+</div>
+
+
+@code {
+    public List<EncuestaComunitaria.Models.PatientModel> Patients { get; set; } = new List<EncuestaComunitaria.Models.PatientModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Patients = await PatientService.GetPatientsAsync();
+    }
+
+    void ShowPatient(int id)
+    {
+        NavigationManager.NavigateTo($"patient/{id}");
+    }
+    void ShowEnfermedades(int id)
+    {
+        NavigationManager.NavigateTo($"enfermedades/{id}");
+    }
+    void ShowFuncionales(int id)
+    {
+        NavigationManager.NavigateTo($"funcionales/{id}");
+    }
+    void CreatePatient()
+    {
+        NavigationManager.NavigateTo($"patient");
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/");
+    }
+    void Guardarbase()
+    {
+        // Create a CancellationTokenSource
+        using var cts = new CancellationTokenSource();
+
+        // Get the CancellationToken from the CancellationTokenSource
+        CancellationToken cancellationToken = cts.Token;
+        PatientService.SaveFile(cancellationToken);
+    }
+    void Cargarbase()
+    {
+        PatientService.ReplaceDatabaseAsync();
+    }    
+}

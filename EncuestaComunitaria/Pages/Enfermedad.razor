@@ -1,0 +1,564 @@
+﻿@page "/Enfermedad/{id:int}"
+@page "/Enfermedad/{id:int}/{Idp:int}"
+
+@inject NavigationManager NavigationManager
+@inject EncuestaComunitaria.Services.IPatientService PatientService
+@inject IJSRuntime JSRuntime
+@using Radzen;
+@using Radzen.Blazor;
+
+<style>
+    .fixed-button-borrar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 10px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-cancelar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 150px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-guardar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 300px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+</style>
+
+<h3>Alta de enfermedad</h3>
+@if (Idp == null)
+{
+    <PageTitle>Crear una nueva enfermedad</PageTitle>
+    <h3>Crear una nueva enfermedad</h3>
+}
+else
+{
+    <PageTitle>Editar enfermedad </PageTitle>
+}
+
+<RadzenTemplateForm Data="@SinglePatient" TItem="EncuestaComunitaria.Models.PatientModel" Submit="@OnSubmit">
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
+                <RadzenButton Class="fixed-button-cancelar " ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancelar" Click="@Cancel" />
+                <RadzenButton Class="fixed-button-borrar" ButtonStyle="ButtonStyle.Warning" Icon="delete" style="display: inline-block; margin-left: 10px;" Text="Borrar" Click="@Delete" />
+                <RadzenButton Class="fixed-button-guardar" ButtonStyle="ButtonStyle.Info" Icon="save" style="display: inline-block; margin-left: 10px;" Text="Guardar" Click="@Guardar" />
+            </div>
+        </div>
+    </div>
+
+    <RadzenCard>
+        <RadzenLabel Text="Nombre de la enfermedad" />
+        <RadzenTextBox @bind-Value="enfermedad.Nombre" Name="Nombre" Style="width: 100%" />
+
+        <RadzenLabel Text="¿Quién le dijo?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.DijoId"
+                        Data="@enfermedad.Dijo"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" />
+        <RadzenTextBox @bind-Value="enfermedad.DijoOtro" Name="DijoOtro" Style="width: 100%" />
+
+        <RadzenLabel Text="¿Desde que año?" /> 
+        @* <RadzenDatePicker @bind-Value="enfermedad.DesdeCuando" Name="FechaCaptura" /> *@
+        <RadzenNumeric @bind-Value="enfermedad.DesdeCuando" Name="DesdeCuando" />
+
+        <p>
+        <RadzenLabel Text="¿Toma algún medicamento para esta enfermedad" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.TomaMedicamentoId"
+                        Data="@enfermedad.TomaMedicamento"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        </p>
+
+        <RadzenLabel Text="¿Quién le receta el medicamento?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.RecetaMedicamentoId"
+                        Data="@enfermedad.RecetaMedicamento"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="¿Cuál?" Visible=@(enfermedad.RecetaMedicamentoId==4) />
+        <RadzenTextBox @bind-Value="enfermedad.RecetaMedicamentoOtro" Name="RecetaMedicamentoOtro" Style="width: 100%" Visible=@(enfermedad.RecetaMedicamentoId==4) />
+
+        <RadzenLabel Text=" ¿Cómo consigue este medicamento?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.ComnsigueMedicamentoId"
+                        Data="@enfermedad.ComnsigueMedicamento"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.ComnsigueMedicamentoId==6) />
+        <RadzenTextBox @bind-Value="enfermedad.ComnsigueMedicamentoOtro" Name="RecetaMedicamentoOtro" Style="width: 100%" Visible=@(enfermedad.ComnsigueMedicamentoId==6) />
+    </RadzenCard>
+
+@*     <RadzenCard>
+        <RadzenLabel Text="Lista de medicamentos" Size="H3" class="rz-card-title" />
+        <RadzenLabel Text="presiona el boton para agregar mas medicamentos" Size="H3" class="rz-card-title" />
+        <button type="button" @onclick="AddMedicamento">Agregar medicamento</button>
+        <table class="answers-table">
+            <thead>
+                <tr>
+                    <th>Preguntas</th>
+                    @for (int i = 0; i < medicamentos.Count; i++)
+                    {
+                        <th>Medicamento @(i + 1)</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    ¿Qué medicamento(s) toma?
+                    @foreach (var medicamento in medicamentos)
+                    {
+                        <td>
+                            <RadzenTextBox @bind-Value="medicamento.Nombre" Name="Nombre" Style="width: 100%" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    ¿Cuánto le cuesta este medicamento? 
+                    @foreach (var medicamento in medicamentos)
+                    {
+                        <td>
+                            <RadzenNumeric @bind-Value="medicamento.Costo" Name="Costo" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    ¿Cuánto le dura su medicamento? (por mes)
+                    @foreach (var medicamento in medicamentos)
+                    {
+                        <td>
+                            <RadzenNumeric @bind-Value="medicamento.Duracion" Name="Costo" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Eliminar entrada
+                    @for (int i = 0; i < medicamentos.Count; i++)
+                    {
+                        int index = i;
+                        <td>
+                            <RadzenButton Text="Borrar" Click="@(() => DeleteMedicamento(index))" />
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+    </RadzenCard> *@
+
+    <RadzenCard>
+        <RadzenLabel Text="¿Dónde se atiende esta enfermedad?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.AtiendeEnfermedadId"
+                        Data="@enfermedad.AtiendeEnfermedad"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.AtiendeEnfermedadId==6) />
+        <RadzenTextBox @bind-Value="enfermedad.AtiendeEnfermedadOtro" Name="AtiendeEnfermedad" Style="width: 100%" Visible=@(enfermedad.AtiendeEnfermedadId==6) />
+    </RadzenCard>
+
+@*     <RadzenCard>
+        <RadzenLabel Text="Aparte de los medicamentos que mencionó toma algún otro medicamento o producto para su salud" Size="H3" class="rz-card-title" />
+        <RadzenLabel Text="presiona el boton para agregar mas medicamentos" Size="H3" class="rz-card-title" />
+        <button type="button" @onclick="AddMedicamentoOtro">Agregar medicamento</button>
+        <table class="answers-table">
+            <thead>
+                <tr>
+                    <th>Preguntas</th>
+                    @for (int i = 0; i < medicamentosOtros.Count; i++)
+                    {
+                        <th>Medicamento @(i + 1)</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    ¿Qué medicamento(s) toma?
+                    @foreach (var medicamento in medicamentosOtros)
+                    {
+                        <td>
+                            <RadzenTextBox @bind-Value="medicamento.Nombre" Name="Nombre" Style="width: 100%" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    ¿Cuánto le cuesta este medicamento?
+                    @foreach (var medicamento in medicamentosOtros)
+                    {
+                        <td>
+                            <RadzenNumeric @bind-Value="medicamento.Costo" Name="Costo" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    ¿Cuánto le dura su medicamento?
+                    @foreach (var medicamento in medicamentosOtros)
+                    {
+                        <td>
+                            <RadzenNumeric @bind-Value="medicamento.Duracion" Name="Costo" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Eliminar entrada
+                    @for (int i = 0; i < medicamentosOtros.Count; i++)
+                    {
+                        int index = i;
+                        <td>
+                            <RadzenButton Text="Borrar" Click="@(() => DeleteMedicamentoOtros(index))" />
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+    </RadzenCard> *@
+    <RadzenCard>
+        <RadzenLabel Text="¿A qué servicio de salud acudió primero?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.ServicioSaludAcudioPrimeroId"
+                        Data="@enfermedad.ServicioSaludAcudioPrimero"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.ServicioSaludAcudioPrimeroId==8) />
+        <RadzenTextBox @bind-Value="enfermedad.ServicioSaludAcudioPrimeroOtro" Name="ServicioSaludAcudioPrimero" Style="width: 100%" Visible=@(enfermedad.ServicioSaludAcudioPrimeroId==8) />
+    </RadzenCard>
+
+    <RadzenCard>
+        <RadzenLabel Text="Año aproximado en que acudió a este servicio de salud" />
+         @* <RadzenDatePicker @bind-Value="enfermedad.FechaAcudio" Name="FechaCaptura" /> *@
+        <RadzenNumeric @bind-Value="enfermedad.FechaAcudio" Name="FechaAcudio" />
+    </RadzenCard>
+    
+    <RadzenCard>
+        <RadzenLabel Component="Atendieron" Text="¿Le atendieron?" Style="margin-left: 8px; vertical-align: middle;" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.AtendieronId"
+                        Data="@enfermedad.Atendieron"
+                        Style="width: 100%">
+        </RadzenDropDown>
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==2)">
+        <RadzenLabel Text="¿Por qué no lo atendieron?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.NoAtendieronId"
+                        Data="@enfermedad.NoAtendieron"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.NoAtendieronId==6) />
+        <RadzenTextBox @bind-Value="enfermedad.NoAtendieronOtro" Name="NoAtendieron" Style="width: 100%" Visible=@(enfermedad.NoAtendieronId==6) />
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="¿Qué servicios recibió?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.ServicioRecibioId"
+                        Data="@enfermedad.ServicioRecibio"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" />
+        <RadzenTextBox @bind-Value="enfermedad.ServicioRecibioOtro" Name="ServicioRecibio" Style="width: 100%" c />
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="¿Cuántas veces acudió a este servicio?" Size="H3" class="rz-card-title" />
+        <RadzenNumeric @bind-Value="enfermedad.ServicioRecibioCantidad" Name="ServicioRecibioCantidad" />
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text=" ¿Qué le dijeron que tenía?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.DijeronTeniaId"
+                        Data="@enfermedad.DijeronTenia"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Nombre Enfermedad" Visible=@(enfermedad.DijeronTeniaId==4 || enfermedad.DijeronTeniaId==1) />
+        <RadzenTextBox @bind-Value="enfermedad.DijeronTeniaEnfermedad" Name="DijeronTeniaEnfermedad" Style="width: 100%" Visible=@(enfermedad.DijeronTeniaId==4 || enfermedad.DijeronTeniaId==1) />
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="  ¿Qué le recomendaron hacer?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.RecomendadoHacerId"
+                        Data="@enfermedad.RecomendadoHacer"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.RecomendadoHacerId==7) />
+        <RadzenTextBox @bind-Value="enfermedad.RecomendadoHacerOtro" Name="RecomendadoHacer" Style="width: 100%" Visible=@(enfermedad.RecomendadoHacerId==7) />
+        <RadzenLabel Text="¿Cuáles?" Visible=@(enfermedad.RecomendadoHacerId==2) />
+        <RadzenTextBox @bind-Value="enfermedad.RecomendadoHacerMedicamentos" Name="RecomendadoHacerMedicamentos" Style="width: 100%" Visible=@(enfermedad.RecomendadoHacerId==2) />
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.RecomendadoHacerId==6) />
+        <RadzenTextBox @bind-Value="enfermedad.RecomendadoHacerEstudios" Name="RecomendadoHacerEstudios" Style="width: 100%" Visible=@(enfermedad.RecomendadoHacerId==6) w/>
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="¿Hizo lo recomendado?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.HizoRecomendadoId"
+                        Data="@enfermedad.HizoRecomendado"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="¿por qué?" Visible=@(enfermedad.HizoRecomendadoId==2) />
+        <RadzenTextBox @bind-Value="enfermedad.HizoRecomendadoOtro" Name="HizoRecomendadoOtro" Style="width: 100%" Visible=@(enfermedad.HizoRecomendadoId==2) />
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="¿Cuánto le costó este servicio?" Size="H3" class="rz-card-title" />
+        <RadzenNumeric @bind-Value="enfermedad.CuantoCosto" Name="ServicioRecibioCantidad" />
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="¿Cómo le pareció este servicio?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.ParecioCostoId"
+                        Data="@enfermedad.ParecioCosto"
+                        Style="width: 100%">
+        </RadzenDropDown>
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.AtendieronId==1)">
+        <RadzenLabel Text="¿Regresaría a este servicio?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.RegresariaServicioId"
+                        Data="@enfermedad.RegresariaServicio"
+                        Style="width: 100%">
+        </RadzenDropDown>
+    </RadzenCard>
+
+    <RadzenCard Visible="@(enfermedad.RegresariaServicioId==2)">
+        <RadzenLabel Text="¿Por qué no regresaría a este servicio?" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@enfermedad.RegresariaServicioRazonId"
+                        Data="@enfermedad.RegresariaServicioRazon"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Especifique" Visible=@(enfermedad.RegresariaServicioRazonId==8) />
+        <RadzenTextBox @bind-Value="enfermedad.RegresariaServicioRazonOtro" Name="HizoRecomendadoOtro" Style="width: 100%" Visible=@(enfermedad.RegresariaServicioRazonId==8) />
+    </RadzenCard>
+
+    <button type="submit" class="btn btn-primary">@btnText</button>
+</RadzenTemplateForm>
+
+<style>
+    .fixed-button-borrar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 10px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-cancelar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 150px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-guardar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 300px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    [Parameter]
+    public int? Idp { get; set; }
+    [Parameter]
+    public String enfermedadNombre { get; set; }
+
+    EncuestaComunitaria.Models.PatientModel SinglePatient { get; set; } = new EncuestaComunitaria.Models.PatientModel();
+    EncuestaComunitaria.Models.Enfermedades enfermedad { get; set; } = new EncuestaComunitaria.Models.Enfermedades();
+
+    string btnText = string.Empty;
+
+    private List<EncuestaComunitaria.Models.Medicamento> medicamentos = new List<EncuestaComunitaria.Models.Medicamento>();
+    private List<EncuestaComunitaria.Models.MedicamentoOtro> medicamentosOtros = new List<EncuestaComunitaria.Models.MedicamentoOtro>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Idp != null)
+        {
+            enfermedad = await PatientService.GetEnfermedadesByIdAsync(Idp.Value);
+            SinglePatient = await PatientService.GetPatientByIdAsync(Id.Value);
+            enfermedad.MedicamentoCollection = await PatientService.GetMedicamentosAsync(Idp.Value);
+            enfermedad.MedicamentoOtrosCollection = await PatientService.GetMedicamentosOtrosAsync(Idp.Value);
+            btnText = "Actualizar";
+        }
+        else
+        {
+            if(await PatientService.NombreEnfermedadExists(Id.Value, enfermedadNombre))
+            {
+                enfermedad = await PatientService.GetEnfermedadesByNameAsync(Id.Value, enfermedadNombre);
+                enfermedad.MedicamentoCollection = await PatientService.GetMedicamentosAsync(enfermedad.Id);
+                enfermedad.MedicamentoOtrosCollection = await PatientService.GetMedicamentosOtrosAsync(enfermedad.Id);
+                foreach (var medicamento in enfermedad.MedicamentoCollection)
+                {
+                    medicamentos.Add(medicamento);
+                }
+                foreach (var medicamento in enfermedad.MedicamentoOtrosCollection)
+                {
+                    medicamentosOtros.Add(medicamento);
+                }
+            }
+            else
+            {
+                enfermedad.Nombre = enfermedadNombre;
+            }
+            SinglePatient = await PatientService.GetPatientByIdAsync(Id.Value);
+            btnText = "Dar de alta enfermedad";
+        }
+    }
+
+    async Task OnSubmit()
+    {
+        if (Idp == null)
+        {
+            enfermedad.PatientId = Id.Value;
+            await PatientService.AddEnfermedadesAsync(enfermedad);
+        }
+        else
+        {
+            await PatientService.UpdateEnfermedadesAsync(enfermedad);
+        }  
+        foreach (var medicamento in enfermedad.MedicamentoCollection)
+        {
+            if (medicamento.Id == 0)
+            {
+                medicamento.EmfermedadId = enfermedad.Id;
+                await PatientService.AddMedicamentosAsync(medicamento);
+            }
+            else
+            {
+                await PatientService.UpdateMedicamentosAsync(medicamento);
+            }
+        }
+        foreach (var medicamento in enfermedad.MedicamentoOtrosCollection)
+        {
+            if (medicamento.Id == 0)
+            {
+                medicamento.EmfermedadId = enfermedad.Id;
+                await PatientService.AddMedicamentosOtrosAsync(medicamento);
+            }
+            else
+            {
+                await PatientService.UpdateMedicamentosOtrosAsync(medicamento);
+            }
+        }
+        NavigationManager.NavigateTo($"patient/{SinglePatient.Id}");
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"enfermedades/{SinglePatient.Id}");
+    }
+
+    async void Delete()
+    {
+        if (Idp != null)
+        {
+            await PatientService.DeleteEnfermedadesAsync(Id.Value, Idp.Value);
+            NavigationManager.NavigateTo($"enfermedades/{SinglePatient.Id}");
+        }
+    }
+    public async void Guardar()
+    {
+        if (Idp == null)
+        {
+            enfermedad.PatientId = Id.Value;
+            enfermedad.Id = await PatientService.AddEnfermedadesAsync(enfermedad);
+            Idp = enfermedad.Id;
+        }
+        else
+        {
+            await PatientService.UpdateEnfermedadesAsync(enfermedad);
+        }
+        foreach (var medicamento in enfermedad.MedicamentoCollection)
+        {
+            if (medicamento.Id == 0)
+            {
+                medicamento.EmfermedadId = enfermedad.Id;
+                await PatientService.AddMedicamentosAsync(medicamento);
+            }
+            else
+            {
+                await PatientService.UpdateMedicamentosAsync(medicamento);
+            }
+        }
+        foreach (var medicamento in enfermedad.MedicamentoOtrosCollection)
+        {
+            if (medicamento.Id == 0)
+            {
+                medicamento.EmfermedadId = enfermedad.Id;
+                await PatientService.AddMedicamentosOtrosAsync(medicamento);
+            }
+            else
+            {
+                await PatientService.UpdateMedicamentosOtrosAsync(medicamento);
+            }
+        }
+    }
+
+    private async Task AddMedicamento()
+    {
+        enfermedad.CantidadMedicamento++;
+        var medicamento = new EncuestaComunitaria.Models.Medicamento();
+        medicamento.EmfermedadId = enfermedad.Id;
+        medicamento.Nombre = "";
+        medicamento.Costo = 0;
+        medicamento.Duracion = 0;
+        await InvokeAsync(() => { StateHasChanged(); });
+        medicamentos.Add(medicamento);
+        enfermedad.MedicamentoCollection = medicamentos;
+    }
+
+    private async Task AddMedicamentoOtro()
+    {
+        enfermedad.CantidadMedicamentoOtros++;
+        var medicamentoOtro = new EncuestaComunitaria.Models.MedicamentoOtro();
+        medicamentoOtro.EmfermedadId = enfermedad.Id;
+        medicamentoOtro.Nombre = "";
+        medicamentoOtro.Costo = 0;
+        medicamentoOtro.Duracion = 0;
+        await InvokeAsync(() => { StateHasChanged(); });
+        medicamentosOtros.Add(medicamentoOtro);
+        enfermedad.MedicamentoOtrosCollection = medicamentosOtros;
+    }
+
+
+    private void DeleteMedicamento(int index)
+    {
+        if (index >= 0 && index < medicamentos.Count)
+        {
+            if (Id != null)
+            {
+                PatientService.DeleteMedicamentosAsync(SinglePatient.Id, medicamentos[index].Id);
+            }
+            medicamentos.RemoveAt(index);
+        }
+    }
+
+    private void DeleteMedicamentoOtros(int index)
+    {
+        if (index >= 0 && index < medicamentosOtros.Count)
+        {
+            if (Id != null)
+            {
+                PatientService.DeleteMedicamentosOtrosAsync(SinglePatient.Id, medicamentosOtros[index].Id);
+            }
+            medicamentosOtros.RemoveAt(index);
+        }
+    }
+}

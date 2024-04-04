@@ -1,0 +1,2170 @@
+﻿@page "/Patient"
+@page "/Patient/{id:int}"
+
+@inject NavigationManager NavigationManager
+@inject EncuestaComunitaria.Services.IPatientService PatientService
+@inject IJSRuntime JSRuntime
+@using Radzen;
+@using Radzen.Blazor;
+@inject NavigationManager NavigationManager
+
+<style>
+    .fixed-button-borrar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 10px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-cancelar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 150px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+
+    .fixed-button-guardar {
+        position: fixed;
+        top: 10px; /* Adjust as needed */
+        right: 300px; /* Adjust as needed */
+        z-index: 1000; /* Ensures the button is above other elements */
+    }
+</style>
+
+@if (Id == null)
+{
+    <PageTitle>Crear un nuevo paciente</PageTitle>
+    <h3>Nuevo paciente</h3>
+}
+else
+{
+    <PageTitle>Editar </PageTitle>
+    <h3>Paciente: @SinglePatient.Name</h3>
+}
+
+<RadzenTemplateForm Data="@SinglePatient" TItem="EncuestaComunitaria.Models.PatientModel" Submit="@OnSubmit">
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
+                <RadzenButton Class="fixed-button-cancelar " ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancelar" Click="@Cancel" />
+                <RadzenButton Class="fixed-button-borrar" ButtonStyle="ButtonStyle.Warning" Icon="delete" style="display: inline-block; margin-left: 10px;" Text="Borrar" Click="@Delete" />
+                <RadzenButton Class="fixed-button-guardar" ButtonStyle="ButtonStyle.Info" Icon="save" style="display: inline-block; margin-left: 10px;" Text="Guardar" Click="@Guardar" />
+            </div>
+        </div>
+    </div>
+
+    <RadzenCard Visible=@(sectioncount == 0)>
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Lugar de aplicacion" />
+                    <RadzenTextBox @bind-Value="SinglePatient.LugarAplicacion" Name="LugarAplicacion" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Nombre del encuestador" />
+                    <RadzenTextBox @bind-Value="SinglePatient.NombreEncuestador" Name="NombreEncuestador" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Fecha de captura" />
+                    <RadzenDatePicker @bind-Value="SinglePatient.FechaCaptura" Name="FechaCaptura" />
+                </div>
+            </div>
+        </RadzenCard>
+    </RadzenCard>
+
+    
+    <RadzenCard Visible=@(sectioncount == 1)>
+        <RadzenLabel Text="SECCIÓN A. DATOS DEL PACIENTE" Size="H6" class="rz-card-title" />
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenLabel Text="Nombre Completo" />
+                    <RadzenTextBox @bind-Value="SinglePatient.Name" Name="Name" />
+                </div>
+                <div class="col-md-6">
+                    <RadzenLabel Text="Apellido paterno" />
+                    <RadzenTextBox @bind-Value="SinglePatient.ApellidoP" Name="ApellidoP" />
+                </div>
+                <div class="col-md-6">
+                    <RadzenLabel Text="Apellido materno" />
+                    <RadzenTextBox @bind-Value="SinglePatient.ApellidoM" Name="ApellidoM" />
+                </div>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="Dirección" Size="H3" class="rz-card-title" />
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Calle" Size="H3" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.Street" Name="Calle" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Número" Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.Number" Name="Calle" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Entre qué calles" Size="H3" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.EntreCalles" Name="Calle" />
+                </div>
+@*                 <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Comunidad de residencia:" Size="H3" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.Comunidad" Name="Calle" />
+                </div> *@
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Numero de telefono de contacto:" Size="H3" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.NumeroTelefono" Name="Calle" />
+                </div>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Cuántos años tienes?" Size="H3" class="rz-card-title"/>
+                    <RadzenNumeric @bind-Value="SinglePatient.Edad" Name="Edad" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Género" Size="H3" class="rz-card-title"/>
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.SexoId"
+                                    Data="@SinglePatient.Sexo"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+            </div>
+        </RadzenCard>
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="Municipio:" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.MunicipioId"
+                                Data="@SinglePatient.Municipio"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Cuántos años estudió?" Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.Estudios" Name="Estudios" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Estado civil:" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.EcivilId"
+                                    Data="@SinglePatient.Ecivil"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Dónde naciste?" Size="H3" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.LugarNacimiento" Name="Calle" />
+                </div>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Tienes hijos?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.HijosId"
+                                    Data="@SinglePatient.Hijos"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Cuántos hijos tienes?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.HijosId==1)/>
+                    <RadzenNumeric @bind-Value="SinglePatient.HijosCuantos" Name="HijosCuantos" Visible=@(SinglePatient.HijosId==1) />
+                </div>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Hablas Español? " Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.HablasEspanolId"
+                                    Data="@SinglePatient.HablasEspanol"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Sabes leer y escribir en español?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.EscribesEspanolId"
+                                    Data="@SinglePatient.EscribesEspanol"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Hablas Maya?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.HablasMayaId"
+                                    Data="@SinglePatient.HablasMaya"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="¿Sabes leer y escribir en Maya?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.EscribesMayaId"
+                                                        Data="@SinglePatient.EscribesMaya"
+                                                        Style="width: 100%">
+                    </RadzenDropDown>
+                </div>
+            </div>
+        </RadzenCard>
+    </RadzenCard>
+
+   
+    <RadzenCard Visible=@(sectioncount == 2)>
+        <RadzenLabel Text="SECCIÓN B. CARACTERÍSTICAS DE LA VIVIENDA" Size="H6" class="rz-card-title" />
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Cuántas personas viven normalmente en este hogar?" />
+                <RadzenNumeric @bind-Value="SinglePatient.PersonasViven" Name="PersonasViven" />
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿De qué material es la mayor parte del techo de tu vivienda?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.TechosId"
+                                Data="@SinglePatient.Techos"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.TechosId==6) />
+                <RadzenTextBox @bind-Value="SinglePatient.TechosOtro" Name="TechosOtro" Visible=@(SinglePatient.TechosId==6) />
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿De qué material es la mayor parte de las paredes o muros de tu vivienda?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.ParedesId"
+                                Data="@SinglePatient.Paredes"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.ParedesId==6) />
+                <RadzenTextBox @bind-Value="SinglePatient.ParedesOtro" Name="ParedesOtro" Visible=@(SinglePatient.ParedesId==6) />
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿De qué material es la mayor parte del piso de tu vivienda?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.PisoId"
+                                Data="@SinglePatient.Piso"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.PisoId==5) />
+                <RadzenTextBox @bind-Value="SinglePatient.PisoOtro" Name="PisoOtro" Visible=@(SinglePatient.PisoId==5) />
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Cuántos cuartos tiene esta vivienda sin contar cocina ni baño?" />
+                <RadzenNumeric @bind-Value="SinglePatient.NumeroCuartos" Name="NumeroCuartos" />
+            </div>
+        </RadzenCard>
+
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Tiene un cuarto aparte para cocinar?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.CuartoCocinaId"
+                                Data="@SinglePatient.CuartoCocina"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Duermen en el cuarto donde se cocina?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.DuermeCocinaId"
+                                Data="@SinglePatient.DuermeCocina"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Qué combustible usan para cocinar?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.CombustibleId"
+                                Data="@SinglePatient.Combustible"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.CombustibleId==6) />
+                <RadzenTextBox @bind-Value="SinglePatient.CombustibleOtro" Name="CombustibleOtro" Visible=@(SinglePatient.CombustibleId==6) />
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="En esta vivienda la luz eléctrica la obtienen de…" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.ElectricidadId"
+                                Data="@SinglePatient.Electricidad"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.ElectricidadId==4) />
+                <RadzenTextBox @bind-Value="SinglePatient.ElectricidadOtro" Name="ElectricidadOtro" Visible=@(SinglePatient.ElectricidadId==4) />
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="En esta vivienda tienen:" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.AguaId"
+                                Data="@SinglePatient.Agua"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Cuántos días a la semana llega el agua a la vivienda?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.AguaDiasId"
+                                Data="@SinglePatient.AguaDias"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿A dónde va el agua del baño en esta casa?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.DrenajeId"
+                                Data="@SinglePatient.Drenaje"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Este servicio sanitario lo comparten con otra vivienda?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.DrenajeComparteId"
+                                Data="@SinglePatient.DrenajeComparte"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="¿Qué le hace a la basura?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.BasuraId"
+                                Data="@SinglePatient.Basura"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </div>
+        </RadzenCard>
+
+        <RadzenLabel Text="¿En tu vivienda tienen…" Size="H3" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_1" Text="Automóvil particular" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_1 Name="vivienda_tienen_1" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_2" Text="Camioneta y camión" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_2 Name="vivienda_tienen_2" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_3" Text="Motocicleta" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_3 Name="vivienda_tienen_3" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_4" Text="Triciclo" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_4 Name="vivienda_tienen_4" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_5" Text="Bicicleta" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_5 Name="vivienda_tienen_5" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_6" Text="Televisión" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_6 Name="vivienda_tienen_6" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_7" Text="TV de paga (cable o sky)" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_7 Name="vivienda_tienen_7" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_8" Text="Refrigerador" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_8 Name="vivienda_tienen_8" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_9" Text="Radio" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_9 Name="vivienda_tienen_9" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_10" Text="Teléfono fijo" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_10 Name="vivienda_tienen_10" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_11" Text="Teléfono celular" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_11 Name="vivienda_tienen_11" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_12" Text="Computadora" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_12 Name="vivienda_tienen_12" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_13" Text="Tablet" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_13 Name="vivienda_tienen_13" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_14" Text="Servicio de internet" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_14 Name="vivienda_tienen_14" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_15" Text="Estufa de gas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_15 Name="vivienda_tienen_15" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_16" Text="Microondas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_16 Name="vivienda_tienen_16" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_17" Text="Licuadora" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_17 Name="vivienda_tienen_17" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_18" Text="Lavadora" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_18 Name="vivienda_tienen_18" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_19" Text="Plancha" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_19 Name="vivienda_tienen_19" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_20" Text="Tinaco" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_20 Name="vivienda_tienen_20" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_21" Text="Cisterna " Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_21 Name="vivienda_tienen_21" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_22" Text="Abanico o aire acondicionado" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_22 Name="vivienda_tienen_22" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="vivienda_tienen_23" Text="Otra casa, inmueble, construcción o terreno" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.vivienda_tienen_23 Name="vivienda_tienen_23" TValue="bool" />
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+
+   
+    <RadzenCard Visible=@(sectioncount == 3)>
+        <RadzenLabel Text="SECCIÓN C. DATOS CLÍNICO" Size="H6" class="rz-card-title" />
+
+        <RadzenCard>
+            <div class="row">
+                <RadzenLabel Text="Presión arterial" Size="H3" class="rz-card-title" />
+            </div>
+            <div class="row">
+                <RadzenCard>
+                    <RadzenLabel Text="Presión arterial SYS:" Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.Presion_Sys" Name="Presion_Sys" />
+                    <RadzenLabel Text="/" Size="H3" class="rz-card-title" />
+                    <RadzenLabel Text="Presión arterial DIA:" Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.Presion_Dia" Name="Presion_Dia" />
+                </RadzenCard>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Peso (kg):" Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.Peso" Name="Peso" />
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <RadzenLabel Text="Talla (cm):" Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.Talla" Name="Talla" />
+                </div>
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Component="glucosa" Text="Glucosa en sangre capilar" Style="margin-left: 8px; vertical-align: middle;"/>
+            <RadzenCard>
+                <RadzenLabel Component="glucosa_1" Text="Ayuno" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.GlucosaAyuno Name="Ayuno" TValue="bool" />
+                <RadzenLabel Component="glucosa_2" Text="Casual" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.GlucosaCasual Name="Casual" TValue="bool" />
+                <RadzenLabel Text="Valor de glucosa ( mg/dl)" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.GlucosaValor" Name="GlucosaValor" />
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+
+    
+    <RadzenCard Visible=@(sectioncount == 4)>
+        <RadzenLabel Text="SECCIÓN D. COMORBILIDAD" Size="H6" class="rz-card-title" />
+        <RadzenLabel Text="Te han dicho o tú sabes si tienes algunas de estas enfermedades: " Size="H3" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_1" Text="Diabetes" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_1 Name="Comorbilidad_1" TValue="bool" Change=@OnCheckboxChanged />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_2" Text="Presión alta" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_2 Name="Comorbilidad_2" TValue="bool" Change=@OnCheckboxChanged />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_3" Text="Enfermedad del corazón" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_3 Name="Comorbilidad_3" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_14" Text="Enfermedades reumáticas o reumas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_14 Name="Comorbilidad_14" TValue="bool" Change=@OnCheckboxChanged />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_4" Text="Alcoholismo (tomar alcohol)" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_4 Name="Comorbilidad_4" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_5" Text="Pensar mucho (padecer de los nervios)" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_5 Name="Comorbilidad_5" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_6" Text="Depresión (tristeza profunda)" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_6 Name="Comorbilidad_6" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_7" Text="Fumas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_7 Name="Comorbilidad_7" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_8" Text="Gastritis" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_8 Name="Comorbilidad_8" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_9" Text="Obesidad" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_9 Name="Comorbilidad_9" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_10" Text="Colesterol alto" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_10 Name="Comorbilidad_10" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_11" Text="Várices" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_11 Name="Comorbilidad_11" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_12" Text="Drogadicción" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_12 Name="Comorbilidad_12" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="Comorbilidad_13" Text="Otros, especifique" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.Comorbilidad_13 Name="Comorbilidad_13" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="especifique" Size="H3" class="rz-card-title" Visible="@SinglePatient.Comorbilidad_13" />
+                <RadzenTextBox @bind-Value="SinglePatient.Comorbilidad_Otro" Name="Comorbilidad_Otro" Visible="@SinglePatient.Comorbilidad_13" />
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+
+    <RadzenCard Visible=@(sectioncount == 5)>
+        <RadzenLabel Text="SECCIÓN E. HISTORIA DE TRABAJO" Size="H6" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenLabel Text="¿Trabajaste hoy?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.TrabajasteId"
+                        Data="@SinglePatient.Trabajaste"
+                        Style="width: 100%">
+            </RadzenDropDown>
+
+            <RadzenLabel Text="Si no trabajaste, ¿por qué no lo hiciste?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.TrabajasteId==2) />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value" Visible=@(SinglePatient.TrabajasteId==2)
+            @bind-Value="@SinglePatient.TrabajasteNoId"
+                            Data="@SinglePatient.TrabajasteNo"
+                            Style="width: 100%">
+            </RadzenDropDown>
+            <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.TrabajasteNoId==3) />
+            <RadzenTextBox @bind-Value="SinglePatient.TechosOtro" Name="TechosOtro" Visible=@(SinglePatient.TrabajasteNoId==3) />
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Qué haces o a qué te dedicas?" Size="H3" class="rz-card-title" />
+            <RadzenTextBox @bind-Value="SinglePatient.Dedicas" Name="Dedicas" />
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Cuántas horas trabajas al día?" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="SinglePatient.HorasTrabajas" Name="HorasTrabajas" />
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Tienes milpa?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.MilpaId"
+                            Data="@SinglePatient.Milpa"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="Aproximadamente, ¿Cuánto ganas a la semana?" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="SinglePatient.GanasSemana" Name="GanasSemana" />
+            <RadzenLabel Text="Aproximadamente, ¿Cuánto gastas a la semana?" Size="H3" class="rz-card-title" />
+            <RadzenNumeric @bind-Value="SinglePatient.GastasSemana" Name="GanasSemana" />
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Recibe algún apoyo económico? (Becas, programas del gobierno, programas del municipio)." Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.ApoyoEconomicoId"
+                            Data="@SinglePatient.ApoyoEconomico"
+                            Style="width: 100%">
+            </RadzenDropDown>
+            <RadzenLabel Text="¿Cuánto le dan?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.ApoyoEconomicoId==1) />
+            <RadzenNumeric @bind-Value="SinglePatient.ApoyoEconomicoCantidad" Name="ApoyoEconomicoCantidad" Visible=@(SinglePatient.ApoyoEconomicoId==1) />
+        </RadzenCard>
+    </RadzenCard>
+
+    
+    <RadzenCard Visible=@(sectioncount == 6)>
+        <RadzenCard>
+            <RadzenLabel Text="SECCIÓN F. DOLOR, INFLAMACIÓN O RIGIDEZ" Size="H6" class="rz-card-title" />
+            <RadzenLabel Text="¿Tienen o han tenido reumatismo tus papás, sus hermanos o sus hijos?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.ReumaFamiliaId"
+                            Data="@SinglePatient.ReumaFamilia"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Has tenido dolor, hinchazón o rigidez en tu cuerpo en los ÚLTIMOS 7 DÍAS?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.TenidoDolorSieteDiasId"
+                            Data="@SinglePatient.TenidoDolorSieteDias"
+                            Style="width: 100%"
+                            Change=@OnCheckboxChanged>
+            </RadzenDropDown>
+        </RadzenCard>
+
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1)>
+            <div class="human-body-container" @onclick="CaptureClickDolorSiete" @ref="imageContainer7d">
+                <svg class="human-body" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+                    <image href="./images/human-body.png" width="800" height="800" />
+                    @for (int i = 0; i < clicks7d.Count; i++)
+                    {
+                        var click = clicks7d[i];
+                        <circle cx="@click.X" cy="@click.Y" r="10" style="fill:red" />
+                        @*en razor por alguna razon ocupas dos <text>*@
+                        <text><text x="@click.X" y="@click.Y" font-size="10" text-anchor="middle" dominant-baseline="central" style="fill:white">@(i+1)</text></text>
+                    }
+                </svg>
+            </div>
+            <div>
+                @for (int i = 0; i < clicks7d.Count; i++)
+                {
+                    int index = i;
+                    <RadzenCard>
+                        <RadzenLabel Text="@($"¿Cuánto tiempo has tenido este dolor? (Dolor numero {index+1}):")" />
+                        <RadzenLabel Text="Semanas" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="clicks7d[index].TiempoSemanas" ID="@($"TiempoSemanas{index+1}")" />
+                        <RadzenLabel Text="Meses" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="clicks7d[index].TiempoMeses" ID="@($"TiempoMeses{index+1}")" />
+                        <RadzenLabel Text="Años" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="clicks7d[index].TiempoAnos" ID="@($"TiempoAnos{index+1}")" />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="¿El dolor te pasó por golpe, torcedura o caída?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@clicks7d[index].DolorPasoId"
+                                        Data="@clicks7d[index].DolorPaso"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="SI CONTESTA QUE SÍ, DI CUÁL FUE LA CAUSA:" Size="H3" class="rz-card-title" Visible=@(clicks7d[index].DolorPasoId==1) />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value" Visible=@(clicks7d[index].DolorPasoId==1)
+                        @bind-Value="@clicks7d[index].DolorPasoCausaId"
+                                        Data="@clicks7d[index].DolorPasoCausa"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                        <RadzenLabel Text="¿cual?" Size="H3" class="rz-card-title" Visible=@(clicks7d[index].DolorPasoCausaId==4) />
+                        <RadzenTextBox @bind-Value="clicks7d[index].DolorPasoCausaOtro" Name="DolorPasoCausaOtro" Visible=@(clicks7d[index].DolorPasoCausaId==4) />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="Di cuánto dolor has tenido por tu enfermedad en estos ÚLTIMOS 7 DÍAS?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@clicks7d[index].DolorCuantoId"
+                                        Data="@clicks7d[index].DolorCuanto"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+
+                    <RadzenButton Text="Delete" Click="@(() => DeleteClick7d(index))" />
+                }
+            </div>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Tuviste dolor, hinchazón o rigidez en EN TU CUERPO alguna vez en TU VIDA?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.TenidoDolorHistoiricoId"
+                            Data="@SinglePatient.TenidoDolorHistoirico"
+                            Style="width: 100%" 
+                            Change=@OnCheckboxChanged>
+            </RadzenDropDown>
+        </RadzenCard>
+
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorHistoiricoId==1)>
+            <div class="human-body-container" @onclick="CaptureClickDolorHistorico" @ref="imageContainerH">
+                <svg class="human-body" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+                    <image href="./images/human-body.png" width="800" height="800" />
+                    @for (int i = 0; i < clicksH.Count; i++)
+                    {
+                        var click = clicksH[i];
+                        <circle cx="@click.X" cy="@click.Y" r="10" style="fill:red" />
+                        @*en razor por alguna razon ocupas dos <text>*@
+                        <text><text x="@click.X" y="@click.Y" font-size="10" text-anchor="middle" dominant-baseline="central" style="fill:white">@(i + 1)</text></text>
+                    }
+                </svg>
+            </div>
+            <div>
+                @for (int i = 0; i < clicksH.Count; i++)
+                {
+                    int index = i;
+                    <RadzenCard>
+                        <RadzenLabel Text="@($"¿Cuánto tiempo has tenido este dolor? (Dolor numero {index+1}):")" />
+                        <RadzenLabel Text="Semanas" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="clicksH[index].TiempoSemanas" ID="@($"TiempoSemanas{index+1}")" />
+                        <RadzenLabel Text="Meses" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="clicksH[index].TiempoMeses" ID="@($"TiempoMeses{index+1}")" />
+                        <RadzenLabel Text="Años" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="clicksH[index].TiempoAnos" ID="@($"TiempoAnos{index+1}")" />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="¿El dolor te pasó por golpe, torcedura o caída?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@clicksH[index].DolorPasoId"
+                                        Data="@clicksH[index].DolorPaso"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="SI CONTESTA QUE SÍ, DI CUÁL FUE LA CAUSA:" Size="H3" class="rz-card-title" Visible=@(clicksH[index].DolorPasoId==1) />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value" Visible=@(clicksH[index].DolorPasoId==1)
+                        @bind-Value="@clicksH[index].DolorPasoCausaId"
+                                        Data="@clicksH[index].DolorPasoCausa"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                        <RadzenLabel Text="¿cual?" Size="H3" class="rz-card-title" Visible=@(clicksH[index].DolorPasoCausaId==4) />
+                        <RadzenTextBox @bind-Value="clicksH[index].DolorPasoCausaOtro" Name="DolorPasoCausaOtro" Visible=@(clicksH[index].DolorPasoCausaId==4) />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="Di cuánto dolor has tenido por tu enfermedad" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@clicksH[index].DolorCuantoId"
+                                        Data="@clicksH[index].DolorCuanto"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    </RadzenCard>
+
+                    <RadzenButton Text="Delete" Click="@(() => DeleteClickH(index))" />
+                }
+            </div>
+        </RadzenCard>
+    </RadzenCard>
+
+    
+    <RadzenCard Visible=@(sectioncount == 7)>
+        <RadzenLabel Text="SECCIÓN G. INCAPACIDAD LABORAL" Size="H6" class="rz-card-title" />
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1 
+        || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_3 || SinglePatient.Comorbilidad_4 || SinglePatient.Comorbilidad_5 || SinglePatient.Comorbilidad_6
+        || SinglePatient.Comorbilidad_7 || SinglePatient.Comorbilidad_8 || SinglePatient.Comorbilidad_9 || SinglePatient.Comorbilidad_10 || SinglePatient.Comorbilidad_11 || SinglePatient.Comorbilidad_12
+        || SinglePatient.Comorbilidad_13 || SinglePatient.Comorbilidad_14)>    
+            <RadzenCard>
+                <RadzenLabel Text="¿Hay cosas que dejaste de hacer por la enfermedad?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.DejaHacerEId"
+                                Data="@SinglePatient.DejaHacerE"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+            <RadzenCard Visible=@(SinglePatient.DejaHacerEId==1)>
+                <RadzenLabel Text="Si la respuesta es Sí, ¿Por cuánto tiempo?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.DejaHacerEId==1)/>
+                <RadzenLabel Text="días:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiDias" Name="DejaHacerSiDias" />
+                <RadzenLabel Text="semanas:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiSemanas" Name="DejaHacerSiSemanas" />
+                <RadzenLabel Text="meses:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiMeses" Name="DejaHacerSiMeses" />
+                <RadzenLabel Text="años:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiAnos" Name="DejaHacerSiAnos" />
+            </RadzenCard>
+            <RadzenCard Visible=@(SinglePatient.DejaHacerEId==3)>
+                <RadzenLabel Text="Si la respuesta es Hoy no pero antes Sí, ¿Por cuánto tiempo?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.DejaHacerEId==1)/>
+                <RadzenLabel Text="días:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHDias" Name="DejaHacerSiHDias" />
+                <RadzenLabel Text="semanas:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHSemanas" Name="DejaHacerSiHSemanas" />
+                <RadzenLabel Text="meses:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHMeses" Name="DejaHacerSiHMeses" />
+                <RadzenLabel Text="años:" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHAnos" Name="DejaHacerSiHAnos" />
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+
+     <RadzenCard Visible=@(sectioncount == 8)>  
+         <RadzenLabel Text="SECCIÓN H. TRATAMIENTO" Size="H6" class="rz-card-title" />
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1
+                    || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_3 || SinglePatient.Comorbilidad_4 || SinglePatient.Comorbilidad_5 || SinglePatient.Comorbilidad_6
+                    || SinglePatient.Comorbilidad_7 || SinglePatient.Comorbilidad_8 || SinglePatient.Comorbilidad_9 || SinglePatient.Comorbilidad_10 || SinglePatient.Comorbilidad_11 || SinglePatient.Comorbilidad_12
+                    || SinglePatient.Comorbilidad_13 || SinglePatient.Comorbilidad_14)>
+            <RadzenCard>
+                <RadzenLabel Text="¿Con quién has ido a buscar alivio para alguna de tus enfermedades?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.TratamientoIdoId"
+                                Data="@SinglePatient.TratamientoIdo"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Otro:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.TratamientoIdoId==4) />
+                <RadzenTextBox @bind-Value="SinglePatient.TratamientoIdoOtro" Name="TechosOtro" Visible=@(SinglePatient.TratamientoIdoId==4) />
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Tienes medicamentos o has usado medicamentos para el dolor?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.MedicamentoDolorId"
+                                Data="@SinglePatient.MedicamentoDolor"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Di el nombre del medicamento que usas para el dolor:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.MedicamentoDolorId==1) />
+                <RadzenTextBox @bind-Value="SinglePatient.MedicamentoDolorNombre" Name="TechosOtro" Visible=@(SinglePatient.MedicamentoDolorId==1) />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="Otros tratamientos para el dolor:" Size="H3" class="rz-card-title"  />
+                <RadzenTextBox @bind-Value="SinglePatient.OtroDolorNombre" Name="TechosOtro" />
+            </RadzenCard>
+         </RadzenCard>
+    </RadzenCard>
+
+   
+    <RadzenCard Visible=@(sectioncount == 9)>
+        <RadzenCard>
+            <RadzenLabel Text="SECCIÓN I. DIFICULTAD PARA REALIZAR ACTIVIDADES ESPECÍFICAS" Size="H6" class="rz-card-title"/>
+            <p>
+            <RadzenLabel Text="Di cuánta dificultad te dio hacer estos trabajo en los ÚLTIMOS 7 DÍAS" Size="H6" class="rz-card-title"/>
+            </p>
+            <table class="answers-table">
+                <thead>
+                    <tr>
+                        <th>Preguntas</th>
+                        <th>No me costó trabajo</th>
+                        <th>Un poco de trabajo</th>
+                        <th>Me dió mucho  trabajo</th>
+                        <th>No pude hacerlo</th>
+                        <!-- Add more columns as needed -->
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < SinglePatient.ActividadEspecificaQ.Count; i++)
+                    {
+                        var questionIndex = i; // To avoid capturing issue in the loop
+                        <tr>
+                            <td>@SinglePatient.ActividadEspecificaQ[questionIndex]</td>
+                            @for (int j = 0; j < SinglePatient.ActividadEspecificaA.Count; j++)
+                            {
+                                var answerIndex = j+1; // To avoid capturing issue in the loop
+                                <td @onclick="() => ActividadEspecificaSelectAnswer(questionIndex, answerIndex)" style="cursor: pointer;">
+                                    @(SinglePatient.ActividadEspecificaSA.ContainsKey(questionIndex) && SinglePatient.ActividadEspecificaSA[questionIndex] == answerIndex ? "✔️" : "")
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </RadzenCard>
+
+        <RadzenLabel Text="I10. ¿Necesitas ayudarte con alguna de estas cosas como para vestirte, pararte, comer o moverte?" Size="H3" class="rz-card-title" />
+        <RadzenCard >
+            <RadzenCard>
+                <RadzenLabel Component="AyudaBaston" Text="Bastón" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaBaston Name="AyudaBaston" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaMuletas" Text="Muletas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaMuletas Name="AyudaMuletas" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaSillaDeRuedas" Text="Ayuda silla de ruedas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaSillaDeRuedas Name="AyudaSillaDeRuedas" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaSillaArreglada" Text="Ayuda Silla Arreglada" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaSillaArreglada Name="AyudaSillaArreglada" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaEstufaAdaptada" Text="Ayuda Estufa Adaptada" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaEstufaAdaptada Name="AyudaEstufaAdaptada" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaPonertezapato" Text="Ayuda ponerte zapato" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaPonertezapato Name="AyudaPonertezapato" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaOtracosa" Text="Otra cosa" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaOtracosa Name="AyudaOtracosa" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Como qué?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.AyudaOtracosa) />
+                <RadzenTextBox @bind-Value="SinglePatient.AyudaOtracosaString" Name="AyudaOtracosaString" Visible=@(SinglePatient.AyudaOtracosa) />
+            </RadzenCard>
+        </RadzenCard>
+
+
+        <RadzenLabel Text="I22. Di si necesitas ayudarte con alguna de estas cosas para bañarte, secarte, agarrar o hacer algunos  de los trabajos de la casa." Size="H3" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaSillaIrBano" Text="Silla especial para ir al baño" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaSillaIrBano Name="AyudaCosaSillaIrBano" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaSillaBanarse" Text="Silla especial para bañarse" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaSillaBanarse Name="AyudaCosaSillaBanarse" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaAbrirFrasco" Text="Algo para abrir un frasco" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaAbrirFrasco Name="AyudaCosaAbrirFrasco" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaAgarrarseBano" Text="Algo para agarrarse en el  baño" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaAgarrarseBano Name="AyudaCosaAgarrarseBano" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaLargoAlcanzar" Text="Algo largo para  alcanzar las  cosas" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaLargoAlcanzar Name="AyudaCosaLargoAlcanzar" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaAlgoBanarse" Text="Algo largo para  bañarse" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaAlgoBanarse Name="AyudaCosaAlgoBanarse" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Component="AyudaCosaOtro" Text="Otra cosa" Style="margin-left: 8px; vertical-align: middle;" />
+                <RadzenCheckBox @bind-Value=@SinglePatient.AyudaCosaOtro Name="AyudaCosaOtro" TValue="bool" />
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenLabel Text="¿Como qué?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.AyudaCosaOtro) />
+                <RadzenTextBox @bind-Value="SinglePatient.AyudaCosaOtroString" Name="AyudaCosaOtroString" Visible=@(SinglePatient.AyudaCosaOtro) />
+            </RadzenCard>
+        </RadzenCard>
+
+
+        <RadzenCard Visible=@(SinglePatient.Comorbilidad_14)>
+            <RadzenLabel Text="Di cuánto dolor has sentido por tus reumas en los últimos 7 días" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.dolorreumaId"
+                            Data="@SinglePatient.dolorreuma"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        </RadzenCard>
+    </RadzenCard>
+
+    
+    <RadzenCard Visible=@(sectioncount == 10)>
+        <RadzenLabel Text="SECCIÓN J. CARGA BIOMECÁNICA LABORAL" Size="H6" class="rz-card-title" />
+        <RadzenLabel Text="¿Cuantos trabajos has hecho en toda tu vida? (menciona el numero de trabajos realizados durante un periodo largod de tu vida)" Size="H3" class="rz-card-title" />
+        <RadzenLabel Text="presiona el boton para agregar mas trabajos" Size="H3" class="rz-card-title" />
+        <button type="button" @onclick="AddJob">Agregar trabajo</button>
+        <table class="answers-table">
+            <thead>
+                <tr>
+                    <th>Preguntas</th>
+                    @for (int i = 0; i < trabajos.Count; i++)
+                    {
+                        <th>Trabajo @(i + 1)</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    ¿Qué trabajo has hecho en toda tu vida?
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                            @bind-Value="@job.NombreActividadId"
+                                            Data="@job.NombreActividad"
+                                            Style="width: 100%">
+                            </RadzenDropDown>
+                            <RadzenLabel Text="¿Cuál?" Size="H3" class="rz-card-title" Visible=@(job.NombreActividadId==9) />
+                            <RadzenTextBox @bind-Value="job.NombreActividadString" Name="NombreActividadString" Visible=@(job.NombreActividadId==9) />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    _
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                             Dime si cuando haces este trabajo tienes que hacer las siguientes cosas:
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Sacudir las manos
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaSacudirMano Name="CargaBiomecanicaSacudirMano" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Cargar algo de 20 kg
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaCaragar20kg Name="CargaBiomecanicaCaragar20kg" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Empujar cosas de más de 20 kg
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaEmpujar20kg Name="CargaBiomecanicaEmpujar20kg" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Subir o bajar escaleras a cada rato
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaSubirBajar Name="CargaBiomecanicaSubirBajar" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Estar parado más de media hora
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaParadoMasMH Name="CargaBiomecanicaParadoMasMH" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Estar agachado más de media hora
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaAgachadoMasMH Name="CargaBiomecanicaAgachadoMasMH" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Estar caminando más de media hora
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaCaminandoMasMH Name="CargaBiomecanicaCaminandoMasMH" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Pararse y sentarse a cada rato
+                    @foreach (var job in trabajos)
+                    {
+                        <td>
+                            <RadzenCheckBox @bind-Value=@job.CargaBiomecanicaPararSentarse Name="CargaBiomecanicaPararSentarse" TValue="bool" />
+                        </td>
+                    }
+                </tr>
+                <tr>
+                    Eliminar entrada
+                    @for (int i = 0; i < trabajos.Count; i++)
+                    {
+                        int index = i;
+                        <td>
+                            <RadzenButton Text="Borrar" Click="@(() => DeleteTrabajos(index))" />
+                        </td>
+                    }
+                </tr>
+            </tbody>
+        </table>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Qué tan cansado o fatigado se ha sentido por su enfermedad en el último mes?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.CansadoFatigaId"
+                            Data="@SinglePatient.CansadoFatiga"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenLabel Text="¿Hace alguna actividad para divertirse? (Ejemplos: ver tv, salir a pasear, platicar con los vecinos, pasear en otra ciudad, deporte etc)" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.ActividadDiverId"
+                            Data="@SinglePatient.ActividadDiver"
+                            Style="width: 100%">
+            </RadzenDropDown>
+            <RadzenLabel Text="Cuál?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.ActividadDiverId==1) />
+            <RadzenTextBox @bind-Value="SinglePatient.ActividadDiverNombre" Name="ActividadDiverNombre" Visible=@(SinglePatient.ActividadDiverId==1) />
+        </RadzenCard>
+
+        <RadzenCard Visible=@(SinglePatient.ActividadDiverId==1)>
+            <RadzenLabel Text="¿Ha tenido dificultad para hacer esta actividad para divertirse en el último mes?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.ActividadDiverDifId"
+                            Data="@SinglePatient.ActividadDiverDif"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        </RadzenCard>
+    </RadzenCard>
+
+     
+    <RadzenCard Visible=@(sectioncount == 11)>
+        <RadzenLabel Text="SECCIÓN K. CALIDAD DE VIDA (EQ-5D)" Size="H6" class="rz-card-title" />
+        <RadzenLabel Text="Marque la respuesta de cada apartado que mejor describe su estado desalud el día de HOY." Size="H3" class="rz-card-title" />
+        <p>
+        <RadzenLabel Text="Movilidad" Size="H3" class="rz-card-title" />
+        </p>
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@SinglePatient.MovilidadId"
+                        Data="@SinglePatient.Movilidad"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Cuidado Personal" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@SinglePatient.CuidadoPersonalId"
+                        Data="@SinglePatient.CuidadoPersonal"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Actividades diarias (ej, trabajar, estudiar, hacer el quehacer domésticos, actividades familiares o recreativas)" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@SinglePatient.ActividadesDiariasId"
+                        Data="@SinglePatient.ActividadesDiarias"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Dolor" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@SinglePatient.DolorCalidaddeVidaId"
+                        Data="@SinglePatient.DolorCalidaddeVida"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Ansiedad/Depresión" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@SinglePatient.AnsiedadDepresionId"
+                        Data="@SinglePatient.AnsiedadDepresion"
+                        Style="width: 100%">
+        </RadzenDropDown>
+        <RadzenLabel Text="Como considera su estado de salud el día de hoy" Size="H3" class="rz-card-title" />
+        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+        @bind-Value="@SinglePatient.EstadoSaludId"
+                        Data="@SinglePatient.EstadoSalud"
+                        Style="width: 100%">
+        </RadzenDropDown>
+    </RadzenCard>
+
+    <RadzenCard Visible=@(sectioncount == 12)> 
+        <RadzenCard Visible=@(SinglePatient.Comorbilidad_1)>
+            <Enfermedad Id="@SinglePatient.Id" enfermedadNombre="Diabetes" />
+        </RadzenCard>
+    </RadzenCard>
+    <RadzenCard Visible=@(sectioncount == 13)>
+        <RadzenCard Visible=@(SinglePatient.Comorbilidad_2)>
+            <Enfermedad Id="@SinglePatient.Id" enfermedadNombre="Hipertensión" />
+        </RadzenCard>
+    </RadzenCard>
+    <RadzenCard Visible=@(sectioncount == 14)>
+        <RadzenCard Visible=@(SinglePatient.Comorbilidad_14)>
+            <Enfermedad Id="@SinglePatient.Id" enfermedadNombre="Enfermedades reumáticas" />
+        </RadzenCard>
+    </RadzenCard>    
+    <RadzenCard Visible=@(sectioncount == 15)>
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1)>
+            <Enfermedad Id="@SinglePatient.Id" enfermedadNombre="Dolor siete días" />
+        </RadzenCard>
+    </RadzenCard>
+    <RadzenCard Visible=@(sectioncount == 16)>
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorHistoiricoId==1)>
+            <Enfermedad Id="@SinglePatient.Id" enfermedadNombre="Dolor historico" />
+        </RadzenCard>
+    </RadzenCard>
+
+    <RadzenCard Visible=@(sectioncount == 17)>
+        <RadzenLabel Text="SECCIÓN L1. Medicamentos" Size="H6" class="rz-card-title" />
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1 || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_14)>
+            <RadzenCard>
+                <RadzenLabel Text="Escribe todos los medicamentos o tratamientos que usas para tus enfermedades" Size="H3" class="rz-card-title" />
+                <RadzenLabel Text="presiona el boton para agregar mas medicamentos o tratamientos" Size="H3" class="rz-card-title" />
+                <button type="button" @onclick="AddMedicamentoTratamiento">Agregar medicamentos o tratamiento</button>
+                <table class="answers-table">
+                    <thead>
+                        <tr>
+                            <th>Preguntas</th>
+                            @for (int i = 0; i < medicamentos.Count; i++)
+                            {
+                                <th>Medicamento @(i + 1)</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            ¿Qué medicamento(s) toma?
+                            @foreach (var medicamento in medicamentos)
+                            {
+                                <td>
+                                    <RadzenTextBox @bind-Value="medicamento.Nombre" Name="Nombre" Style="width: 100%" />
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            ¿Cuánto le cuesta este medicamento?
+                            @foreach (var medicamento in medicamentos)
+                            {
+                                <td>
+                                    <RadzenNumeric @bind-Value="medicamento.Costo" Name="Costo" />
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            ¿Cuánto le dura su medicamento?
+                            @foreach (var medicamento in medicamentos)
+                            {
+                                <td>
+                                    <RadzenNumeric @bind-Value="medicamento.Duracion" Name="Costo" />
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            ¿Para cual de su enfermedad la toma?
+                            @foreach (var medicamento in medicamentos)
+                            {
+                                <td>
+                                    <RadzenTextBox @bind-Value="medicamento.Enfermedad" Name="Enfermedad" Style="width: 100%" />
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            Eliminar entrada
+                            @for (int i = 0; i < medicamentos.Count; i++)
+                            {
+                                int index = i;
+                                <td>
+                                    <RadzenButton Text="Borrar" Click="@(() => Deletemedicamentos(index))" />
+                                </td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+    
+    <RadzenCard Visible=@(sectioncount == 18)>
+        <RadzenLabel Text="SECCIÓN L2. GASTOS DE BOLSILLO" Size="H6" class="rz-card-title" />
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1
+            || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_3 || SinglePatient.Comorbilidad_4 || SinglePatient.Comorbilidad_5 || SinglePatient.Comorbilidad_6
+            || SinglePatient.Comorbilidad_7 || SinglePatient.Comorbilidad_8 || SinglePatient.Comorbilidad_9 || SinglePatient.Comorbilidad_10 || SinglePatient.Comorbilidad_11 || SinglePatient.Comorbilidad_12
+                    || SinglePatient.Comorbilidad_13 || SinglePatient.Comorbilidad_14)>
+
+                <RadzenCard>
+                    <p>
+                    <RadzenLabel Text="¿Qué tipo de transporte utiliza para acudir a cualquier cita o ir por medicamento?" Size="H3" class="rz-card-title" />
+                    </p>
+                    <p>
+                    <RadzenLabel Text="Ambulancia del Municipio" Size="H3" class="rz-card-title"/>
+                    <RadzenCheckBox @bind-Value=@SinglePatient.TrasporteAmbulacia Name="TrasporteAmbulacia" TValue="bool" />
+                    <RadzenLabel Text="¿Cuánto le cuesta?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.TrasporteAmbulacia) />
+                    <RadzenNumeric @bind-Value="SinglePatient.TrasporteAmbulaciaCosto" Name="TrasporteAmbulaciaCosto" Visible=@(SinglePatient.TrasporteAmbulacia) />
+                    </p>
+                    <p>
+                    <RadzenLabel Text="Flete" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.Flete Name="Flete" TValue="bool" />
+                    <RadzenLabel Text="¿Cuánto le cuesta?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.Flete) />
+                    <RadzenNumeric @bind-Value="SinglePatient.FleteCosto" Name="FleteCosto" Visible=@(SinglePatient.Flete) />
+                    </p>
+                    <p>
+                    <RadzenLabel Text="Vehículo personal." Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.VehiculoPersonal Name="VehículoPersonal" TValue="bool" />
+                    <RadzenLabel Text="¿Cuánto le cuesta?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VehiculoPersonal) />
+                    <RadzenNumeric @bind-Value="SinglePatient.VehiculoPersonalCosto" Name="VehiculoPersonalCosto" Visible=@(SinglePatient.VehiculoPersonal) />
+                    </p>
+                    <p>
+                    <RadzenLabel Text="Auto de vecino" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.VehiculoVecino Name="VehículoPersonal" TValue="bool" />
+                    <RadzenLabel Text="¿Cuánto le cuesta?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VehiculoVecino) />
+                    <RadzenNumeric @bind-Value="SinglePatient.VehiculoVecinoCosto" Name="VehiculoVecinoCosto" Visible=@(SinglePatient.VehiculoVecino) />
+                    </p>
+                    <p>
+                    <RadzenLabel Text="Otro" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.TransporteOtro Name="TransporteOtro" TValue="bool" />
+                    <RadzenLabel Text="¿Cuánto le cuesta?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.TransporteOtro) />
+                    <RadzenTextBox @bind-Value="SinglePatient.TransporteOtroCual" Name="TransporteOtroCual" Visible=@(SinglePatient.TransporteOtro) />
+                    <RadzenNumeric @bind-Value="SinglePatient.TransporteOtroCosto" Name="TransporteOtroCosto" Visible=@(SinglePatient.TransporteOtro) />
+                    </p>
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenLabel Text="¿Quién lo acompaña a sus citas?:" Size="H3" class="rz-card-title"  />
+                    <RadzenTextBox @bind-Value="SinglePatient.QuienAcompana" Name="QuienAcompana" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cuánto tiempo le toma (considerando el regreso en horas)? " Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.TiempoToma" Name="TiempoToma" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Usted paga los gastos para atender su(s) enfermedad(es)?" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value="SinglePatient.PagaGastos" Name="PagaGastos" TValue="bool" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Compra o consigue TODOS los medicamentos que le receta el médico?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.ConsigueMedicamentosId"
+                                    Data="@SinglePatient.ConsigueMedicamentos"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    <RadzenLabel Text="¿Por qué no?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.ConsigueMedicamentosId==2) />
+                    <RadzenTextBox @bind-Value="SinglePatient.ConsigueMedicamentosString" Name="TransporteOtroCual" Visible=@(SinglePatient.ConsigueMedicamentosId==2) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Ha sido hospitalizado en los últimos 2 años?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@SinglePatient.HospitalizadoId"
+                                        Data="@SinglePatient.Hospitalizado"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+
+                    </RadzenCard>
+                </RadzenCard>
+
+                <RadzenCard Visible=@(SinglePatient.HospitalizadoId==1)>
+                    <RadzenCard>
+                        <RadzenLabel Text=" ¿Cuál fue el motivo de la hospitalización?" Size="H3" class="rz-card-title" />
+                        <RadzenTextBox @bind-Value="SinglePatient.HospitalizadoString" Name="HospitalizadoString" />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="¿En qué hospital estuvo?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@SinglePatient.HospitalEstuvoId"
+                                        Data="@SinglePatient.HospitalEstuvo"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                        <RadzenLabel Text="¿Cuál?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.HospitalEstuvoId==4) />
+                        <RadzenTextBox @bind-Value="SinglePatient.HospitalEstuvoOtro" Name="HHospitalEstuvoOtro" Visible=@(SinglePatient.HospitalEstuvoId==4) />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Cuántos días estuvo hospitalizado?" Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="SinglePatient.DiasHospital" Name="DiasHospital" />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Cuánto pagó por la hospitalización? Incluyendo materiales solicitados por el hospital, medicamentos, sondas u otros instrumentos." Size="H3" class="rz-card-title" />
+                        <RadzenNumeric @bind-Value="SinglePatient.PagoHospital" Name="PagoHospital" />
+                    </RadzenCard>
+
+                    <RadzenCard>
+                        <RadzenLabel Text="¿Quién pagó estos gastos?" Size="H3" class="rz-card-title" />
+                        <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                        @bind-Value="@SinglePatient.QuienPagoHospitalId"
+                                        Data="@SinglePatient.QuienPagoHospital"
+                                        Style="width: 100%">
+                        </RadzenDropDown>
+                    <RadzenLabel Text="¿Quien?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.QuienPagoHospitalId==6) />
+                        <RadzenTextBox @bind-Value="SinglePatient.QuienPagoHospitalOtro" Name="QuienPagoHospitalOtro" Visible=@(SinglePatient.QuienPagoHospitalId==6) />
+                    </RadzenCard>
+                </RadzenCard>
+         </RadzenCard>
+    </RadzenCard>
+
+    
+    <RadzenCard Visible=@(sectioncount == 19)>
+        <RadzenLabel Text="USO DE SERVICIOS EN EL HOSPITAL " Size="H6" class="rz-card-title" />
+        <RadzenCard>
+            <RadzenLabel Text="¿Durante los últimos 12 meses usted ha ido a algún hospital?" Size="H3" class="rz-card-title" />
+            <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+            @bind-Value="@SinglePatient.VisitaHospitalId"
+                            Data="@SinglePatient.VisitaHospital"
+                            Style="width: 100%">
+            </RadzenDropDown>
+        </RadzenCard>
+        <RadzenCard Visible=@(SinglePatient.VisitaHospitalId==1)>
+            <RadzenCard>
+                <RadzenLabel Text="¿A qué hospital fue?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.HospitalFueId"
+                                Data="@SinglePatient.HospitalFue"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="¿Cuál?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.HospitalFueId==4) />
+                <RadzenTextBox @bind-Value="SinglePatient.HospitalFueOtro" Name="HHospitalEstuvoOtro" Visible=@(SinglePatient.HospitalFueId==4) />
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Cuántas veces ha ido a atenderse a este hospital?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.HospitalFueNumeroId"
+                                Data="@SinglePatient.HospitalFueNumero"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Cuántas veces acudió al servicio de consulta externa?" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.HospitalVisitaExternaNum" Name="HospitalVisitaExternaNum" />
+            </RadzenCard>
+            <RadzenCard Visible=@(SinglePatient.HospitalVisitaExternaNum>0)>
+                <RadzenCard>
+                    <RadzenLabel Text="Si lo recuerda diganos ¿Cuándo fue(ron) esta(s) visitas?" Size="H3" class="rz-card-title" />
+                    <RadzenLabel Text="Escriba una coma entre cada fecha que recuerde" Size="H2" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.VisitaExternaDateList" Name="VisitaExternaDateList" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Le cobraron?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.VisitaHospitalCobraronId"
+                                    Data="@SinglePatient.VisitaHospitalCobraron"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    <RadzenLabel Text="¿Cuánto?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VisitaHospitalCobraronId==1) />
+                    <RadzenNumeric @bind-Value="SinglePatient.VisitaHospitalCobraronCuanto" Name="VisitaHospitalCobraronCuanto" Visible=@(SinglePatient.VisitaHospitalCobraronId==1) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text=" ¿Recuerda cuánto gastó en transporte y comida (de usted y su acompañante) por visita?" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.VisitaHospitalGastoTransporteRecuerda Name="VisitaHospitalGastoTransporteRecuerda" TValue="bool" />
+                    <RadzenLabel Text=" ¿Cuánto?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VisitaHospitalGastoTransporteRecuerda)/>
+                    <RadzenNumeric @bind-Value="SinglePatient.VisitaHospitalGastoTransporte" Name="VisitaHospitalGastoTransporte" Visible=@(SinglePatient.VisitaHospitalGastoTransporteRecuerda) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cómo lo trataron?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.HospitalTrataronId"
+                                    Data="@SinglePatient.HospitalTrataron"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Cuántas veces acudió al servicio de urgencias?" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.HospitalVisitaUrgenciasNum" Name="HospitalVisitaUrgenciasNum" />
+            </RadzenCard>
+            <RadzenCard Visible=@(SinglePatient.HospitalVisitaUrgenciasNum>0)>
+                <RadzenCard>
+                    <RadzenLabel Text="Si lo recuerda diganos ¿Cuándo fue(ron) esta(s) visitas?" Size="H3" class="rz-card-title" />
+                    <RadzenLabel Text="Escriba una coma entre cada fecha que recuerde" Size="H2" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.VisitaUrgenciaDateList" Name="VisitaUrgenciaDateList" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Le cobraron?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.VisitaUrgenciaHospitalCobraronId"
+                                    Data="@SinglePatient.VisitaUrgenciaHospitalCobraron"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    <RadzenLabel Text="¿Cuánto?:" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VisitaUrgenciaHospitalCobraronId==1) />
+                    <RadzenNumeric @bind-Value="SinglePatient.VisitaUrgenciaHospitalCobraronCuanto" Name="VisitaUrgenciaHospitalCobraronCuanto" Visible=@(SinglePatient.VisitaUrgenciaHospitalCobraronId==1) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text=" ¿Recuerda cuánto gastó en transporte y comida (de usted y su acompañante) por visita?" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.VisitaUrgenciaHospitalGastoTransporteRecuerda Name="VisitaUrgenciaHospitalGastoTransporteRecuerda" TValue="bool" />
+                    <RadzenLabel Text=" ¿Cuánto?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VisitaUrgenciaHospitalGastoTransporteRecuerda)/>
+                    <RadzenNumeric @bind-Value="SinglePatient.VisitaUrgenciaHospitalGastoTransporte" Name="VisitaHospitalGastoTransporte" Visible=@(SinglePatient.VisitaUrgenciaHospitalGastoTransporteRecuerda) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cómo lo trataron?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.HospitalTrataronUrgenciaId"
+                                    Data="@SinglePatient.HospitalTrataronUrgencia"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Cuántas veces fue hospitalizado?" Size="H3" class="rz-card-title" />
+                <RadzenNumeric @bind-Value="SinglePatient.HospitalVisitaHospNum" Name="HospitalVisitaHospNum" />
+            </RadzenCard>
+            <RadzenCard Visible=@(SinglePatient.HospitalVisitaHospNum>0)>
+                <RadzenCard>
+                    <RadzenLabel Text="Si lo recuerda diganos ¿Cuándo fue(ron) esta(s) hospitalización(es)?" Size="H3" class="rz-card-title" />
+                    <RadzenLabel Text="Escriba una coma entre cada fecha que recuerde" Size="H2" class="rz-card-title" />
+                    <RadzenTextBox @bind-Value="SinglePatient.VisitaHospDateList" Name="VisitaHospDateList" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Le cobraron?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.VisitaHospHospitalCobraronId"
+                                    Data="@SinglePatient.VisitaHospciaHospitalCobraron"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    <RadzenLabel Text="¿Cuánto pagó por la hospitalización? Incluyendo materiales solicitados por el hospital, medicamentos, sondas u otros instrumentos. " Size="H3" class="rz-card-title" />
+                    <RadzenNumeric @bind-Value="SinglePatient.VisitaHospHospitalCobraronCuanto" Name="VisitaHospHospitalCobraronCuanto" />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text=" ¿Recuerda cuánto gastó en transporte y comida (de usted y su acompañante) por visita?" Size="H3" class="rz-card-title" />
+                    <RadzenCheckBox @bind-Value=@SinglePatient.VisitaHospHospitalGastoTransporteRecuerda Name="VisitaHospHospitalGastoTransporteRecuerda" TValue="bool" />
+                    <RadzenLabel Text=" ¿Cuánto?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.VisitaHospHospitalGastoTransporteRecuerda) />
+                    <RadzenNumeric @bind-Value="SinglePatient.VisitaHospHospitalGastoTransporte" Name="VisitaHospHospitalGastoTransporte" Visible=@(SinglePatient.VisitaHospHospitalGastoTransporteRecuerda) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Cómo lo trataron?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.HospitalTrataronHospId"
+                                    Data="@SinglePatient.HospitalTrataronHosp"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+
+    <RadzenCard Visible=@(sectioncount == 20)>
+        <RadzenLabel Text="IMPACTO SOCIOECONÓMICO DE LAS ENFERMEDADES (con que pongan alguna enfermedad). Durante los últimos 12 meses" Size="H6" class="rz-card-title" />
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1
+                    || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_3 || SinglePatient.Comorbilidad_4 || SinglePatient.Comorbilidad_5 || SinglePatient.Comorbilidad_6
+                    || SinglePatient.Comorbilidad_7 || SinglePatient.Comorbilidad_8 || SinglePatient.Comorbilidad_9 || SinglePatient.Comorbilidad_10 || SinglePatient.Comorbilidad_11 || SinglePatient.Comorbilidad_12
+                    || SinglePatient.Comorbilidad_13 || SinglePatient.Comorbilidad_14)>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Ha dejado de trabajar a causa de sus enfermedades?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.DejadoTrabajarId"
+                                Data="@SinglePatient.DejadoTrabajar"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Cómo ha cambiado su situación económica debido a sus enfermedades?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.SituacionEconomicaId"
+                                Data="@SinglePatient.SituacionEconomica"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Se ha dado cuenta o le han dicho que necesita hacer una modificación a su casa o en su trabajo por sus enfermedades?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.ModEnfermedadId"
+                                Data="@SinglePatient.ModEnfermedad"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+
+            <RadzenCard Visible=@(SinglePatient.ModEnfermedadId==1)>
+                <RadzenLabel Text="¿Ha hecho estas modificaciones?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.ModEnfermedadHechoId"
+                                Data="@SinglePatient.ModEnfermedadHecho"
+                                Style="width: 100%">
+                </RadzenDropDown>
+                <RadzenLabel Text="Explique" Size="H3" class="rz-card-title" Visible=@(SinglePatient.ModEnfermedadHechoId==2) />
+                <RadzenTextBox @bind-Value="SinglePatient.ModEnfermedadHechoExp" Name="VisitaUrgenciaHospitalCobraronCuanto" Visible=@(SinglePatient.ModEnfermedadHechoId==2) />
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenLabel Text="¿Recibe ayuda por parte de amigos o familiares debido a sus enfermedades?" Size="H3" class="rz-card-title" />
+                <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                @bind-Value="@SinglePatient.AyudaFamAmiId"
+                                Data="@SinglePatient.AyudaFamAmi"
+                                Style="width: 100%">
+                </RadzenDropDown>
+            </RadzenCard>
+
+            <RadzenCard Visible=@(SinglePatient.AyudaFamAmiId==1)>
+                <RadzenCard>
+                    <RadzenLabel Text="¿Quién le ha ayudado con sus enfermedades?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.AyudaFamAmiQuienId"
+                                    Data="@SinglePatient.AyudaFamAmiQuien"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                    <RadzenLabel Text="Especifique parentesco" Size="H3" class="rz-card-title" Visible=@(SinglePatient.AyudaFamAmiQuienId==1) />
+                    <RadzenTextBox @bind-Value="SinglePatient.AyudaFamAmiQuienPariente" Name="AyudaFamAmiQuienPariente" Visible=@(SinglePatient.AyudaFamAmiQuienId==1) />
+                    <RadzenLabel Text="Otro" Size="H3" class="rz-card-title" Visible=@(SinglePatient.AyudaFamAmiQuienId==4) />
+                    <RadzenTextBox @bind-Value="SinglePatient.AyudaFamAmiQuienOtro" Name="AyudaFamAmiQuienPariente" Visible=@(SinglePatient.AyudaFamAmiQuienId==4) />
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Ha tenido que pedir prestado para poder atender su enfermedad?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.PedirPrestadoId"
+                                    Data="@SinglePatient.PedirPrestado"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+
+                <RadzenCard>
+                    <RadzenLabel Text="¿Ha dejado su familiar/amigo de trabajar por ayudarle debido a sus enfermedades?" Size="H3" class="rz-card-title" />
+                    <RadzenDropDown TValue="int" TextProperty="Key" ValueProperty="Value"
+                    @bind-Value="@SinglePatient.FamDejadoTrabajoId"
+                                    Data="@SinglePatient.FamDejadoTrabajo"
+                                    Style="width: 100%">
+                    </RadzenDropDown>
+                </RadzenCard>
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
+
+    <RadzenCard>
+        <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="all_out" Text="Sección anterior" Click="@Anterior" />
+        <RadzenButton ButtonStyle="ButtonStyle.Primary" Icon="all_out" Text="Sección Siguiente" Click="@Siguiente" />
+    </RadzenCard>
+
+     <RadzenCard>
+        <RadzenButton type="submit" Class="btn btn-primary" ButtonStyle="ButtonStyle.Primary" Icon="assignment_returned" Text="Someter"/>
+     </RadzenCard>
+    
+</RadzenTemplateForm>
+
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+    EncuestaComunitaria.Models.PatientModel SinglePatient { get; set; } = new EncuestaComunitaria.Models.PatientModel();
+    string btnText = string.Empty;
+    //data dor image clicks
+    private ElementReference imageContainer7d;
+    private List<EncuestaComunitaria.Models.DolorSieteDias> clicks7d = new List<EncuestaComunitaria.Models.DolorSieteDias>();
+    private ElementReference imageContainerH;
+    private List<EncuestaComunitaria.Models.DolorHistoirico> clicksH = new List<EncuestaComunitaria.Models.DolorHistoirico>();
+
+    //datos carga bimecanica
+    private List<EncuestaComunitaria.Models.CargaBiomecanica> trabajos = new List<EncuestaComunitaria.Models.CargaBiomecanica>();
+
+    //medicamentos
+    private List<EncuestaComunitaria.Models.MedicamentoTratamiento> medicamentos = new List<EncuestaComunitaria.Models.MedicamentoTratamiento>();
+
+    //enfermedad
+    EncuestaComunitaria.Models.Enfermedades enfermedad { get; set; } = new EncuestaComunitaria.Models.Enfermedades();
+
+    //datos navegacion
+    private int sectioncount = 0;
+
+    private async void Siguiente()
+    {
+        sectioncount++;
+        if (sectioncount > 20)
+        {
+            sectioncount = 20;
+        }
+
+        if (sectioncount == 12)
+        {
+            if(SinglePatient.Comorbilidad_1==false)
+            {
+                sectioncount++;
+            }
+        }
+        if (sectioncount == 13)
+        {
+            if (SinglePatient.Comorbilidad_2 == false)
+            {
+                sectioncount++;
+            }
+        }
+        if (sectioncount == 14)
+        {
+            if(SinglePatient.Comorbilidad_14==false)
+            {
+                sectioncount++;
+            }
+        }
+        if (sectioncount == 15)
+        {
+            if (SinglePatient.TenidoDolorSieteDiasId == 2 || SinglePatient.TenidoDolorSieteDiasId == 0)
+            {
+                sectioncount++;
+            }
+        }
+        if (sectioncount == 16)
+        {
+            if (SinglePatient.TenidoDolorHistoiricoId == 2 || SinglePatient.TenidoDolorHistoiricoId == 0)
+            {
+                sectioncount++;
+            }
+        }
+        Guardar();
+        await JSRuntime.InvokeVoidAsync("scrollToTop");
+    }
+    private async void Anterior()
+    {
+        sectioncount--;
+        if (sectioncount < 0)
+        {
+            sectioncount = 0;
+        }
+
+        if (sectioncount == 12)
+        {
+            if (SinglePatient.Comorbilidad_1 == false)
+            {
+                sectioncount--;
+            }
+        }
+        if (sectioncount == 13)
+        {
+            if (SinglePatient.Comorbilidad_2 == false)
+            {
+                sectioncount--;
+            }
+        }
+        if (sectioncount == 14)
+        {
+            if (SinglePatient.Comorbilidad_14 == false)
+            {
+                sectioncount--;
+            }
+        }
+        if (sectioncount == 15)
+        {
+            if (SinglePatient.TenidoDolorSieteDiasId == 2)
+            {
+                sectioncount--;
+            }
+        }
+        if (sectioncount == 16)
+        {
+            if (SinglePatient.TenidoDolorHistoiricoId == 2)
+            {
+                sectioncount--;
+            }
+        }
+        Guardar();
+        await JSRuntime.InvokeVoidAsync("scrollToTop");
+    }
+
+    int EnfermedadesCount => new bool[]
+    {
+        SinglePatient.Comorbilidad_1,
+        SinglePatient.Comorbilidad_2,
+        SinglePatient.Comorbilidad_14,
+        SinglePatient.TenidoDolorSieteDiasId==1,
+        SinglePatient.TenidoDolorHistoiricoId==1
+    }.Count(x => x);
+
+    void OnCheckboxChanged()
+    {
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null)
+        {
+            SinglePatient = await PatientService.GetPatientByIdAsync(Id.Value);
+            SinglePatient.DolorSieteDiasCollecion = await PatientService.GetDolorSieteAsync(Id.Value);
+            SinglePatient.DolorHistoiricoCollecion = await PatientService.GetDolorHistoricoAsync(Id.Value);
+            SinglePatient.CargaBiomecanicaCollection = await PatientService.GetTrabajoAsync(Id.Value);
+            SinglePatient.MedicamentoTratamientoCollection = await PatientService.GetMedicamentoTratamientoAsync(Id.Value);
+            clicks7d = SinglePatient.DolorSieteDiasCollecion;
+            clicksH = SinglePatient.DolorHistoiricoCollecion;
+            trabajos = SinglePatient.CargaBiomecanicaCollection;
+            medicamentos = SinglePatient.MedicamentoTratamientoCollection;
+            btnText = "Actualizar";
+            LoadDificultadActividades();
+        }
+        else
+        {
+            btnText = "Crear";
+            await AddJob();
+        }
+    }
+
+    async void OnSubmit()
+    {
+        if (SinglePatient.Id == 0)
+        {
+            SinglePatient = await PatientService.AddPatientAsync(SinglePatient);
+        }
+        else
+        {
+            await PatientService.UpdatePatientAsync(SinglePatient);
+        }
+        foreach (var dolor in SinglePatient.DolorSieteDiasCollecion)
+        {
+            if(dolor.Id == 0)
+            {
+                dolor.PatientId = SinglePatient.Id;
+                await PatientService.AddDolorSieteAsync(dolor);
+            }
+            else
+            {
+                await PatientService.UpdateDolorSieteAsync(dolor);
+            }
+        }
+        foreach (var dolor in SinglePatient.DolorHistoiricoCollecion)
+        {
+            if (dolor.Id == 0)
+            {
+                dolor.PatientId = SinglePatient.Id;
+                await PatientService.AddDolorHistoricoAsync(dolor);
+            }
+            else
+            {
+                await PatientService.UpdateDolorHistoricoAsync(dolor);
+            }
+        }
+        foreach (var trabajo in SinglePatient.CargaBiomecanicaCollection)
+        {
+            if (trabajo.Id == 0)
+            {
+                trabajo.PatientId = SinglePatient.Id;
+                await PatientService.AddTrabajoAsync(trabajo);
+            }
+            else
+            {
+                await PatientService.UpdateTrabajoAsync(trabajo);
+            }
+        } 
+        foreach (var medicamento in SinglePatient.MedicamentoTratamientoCollection)
+        {
+            if (medicamento.Id == 0)
+            {
+                medicamento.PatientId = SinglePatient.Id;
+                await PatientService.AddMedicamentoTratamientoAsync(medicamento);
+            }
+            else
+            {
+                await PatientService.UpdateMedicamentoTratamientoAsync(medicamento);
+            }
+        }
+        NavigationManager.NavigateTo($"/PatientManagement");
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/PatientManagement");
+    }
+
+    async void Delete()
+    {
+        if (Id != null)
+        {
+            await PatientService.DeletePatientAsync(SinglePatient);
+            NavigationManager.NavigateTo($"/PatientManagement");
+        }
+    }
+
+    async void Guardar()
+    {
+        if (SinglePatient.Id == 0)
+        {
+            SinglePatient = await PatientService.AddPatientAsync(SinglePatient);
+        }
+        else
+        {
+            await PatientService.UpdatePatientAsync(SinglePatient);
+        }
+        foreach (var dolor in SinglePatient.DolorSieteDiasCollecion)
+        {
+            if (dolor.Id == 0)
+            {
+                dolor.PatientId = SinglePatient.Id;
+                await PatientService.AddDolorSieteAsync(dolor);
+            }
+            else
+            {
+                await PatientService.UpdateDolorSieteAsync(dolor);
+            }
+        }
+        foreach (var dolor in SinglePatient.DolorHistoiricoCollecion)
+        {
+            if (dolor.Id == 0)
+            {
+                dolor.PatientId = SinglePatient.Id;
+                await PatientService.AddDolorHistoricoAsync(dolor);
+            }
+            else
+            {
+                await PatientService.UpdateDolorHistoricoAsync(dolor);
+            }
+        }
+        foreach (var trabajo in SinglePatient.CargaBiomecanicaCollection)
+        {
+            if (trabajo.Id == 0)
+            {
+                trabajo.PatientId = SinglePatient.Id;
+                await PatientService.AddTrabajoAsync(trabajo);
+            }
+            else
+            {
+                await PatientService.UpdateTrabajoAsync(trabajo);
+            }
+        }
+        foreach (var medicamento in SinglePatient.MedicamentoTratamientoCollection)
+        {
+            if (medicamento.Id == 0)
+            {
+                medicamento.PatientId = SinglePatient.Id;
+                await PatientService.AddMedicamentoTratamientoAsync(medicamento);
+            }
+            else
+            {
+                await PatientService.UpdateMedicamentoTratamientoAsync(medicamento);
+            }
+        }
+    }
+
+
+    private async Task AddJob()
+    {
+        SinglePatient.CargaBiomecanicaTrabajosTotales++;
+        var job = new EncuestaComunitaria.Models.CargaBiomecanica();
+        job.PatientId = SinglePatient.Id;
+        job.CargaBiomecanicaSacudirMano=false;
+        job.CargaBiomecanicaCaragar20kg = false;
+        job.CargaBiomecanicaEmpujar20kg  = false;
+        job.CargaBiomecanicaSubirBajar  = false;
+        job.CargaBiomecanicaParadoMasMH  = false;
+        job.CargaBiomecanicaAgachadoMasMH  = false;
+        job.CargaBiomecanicaCaminandoMasMH  = false;
+        job.CargaBiomecanicaPararSentarse  = false;
+        job.NombreActividadString = "";
+        job.NombreActividadId = 0;
+        await InvokeAsync(() => { StateHasChanged(); });
+        trabajos.Add(job);
+        SinglePatient.CargaBiomecanicaCollection = trabajos;
+    }
+
+    private async Task AddMedicamentoTratamiento()
+    {
+        SinglePatient.MedicamentoTratamientoTotales++;
+        var medicamento = new EncuestaComunitaria.Models.MedicamentoTratamiento();
+        medicamento.PatientId = SinglePatient.Id;
+        medicamento.Nombre = "";
+        medicamento.Costo = 0;
+        medicamento.Duracion = 0;
+        await InvokeAsync(() => { StateHasChanged(); });
+        medicamentos.Add(medicamento);
+        SinglePatient.MedicamentoTratamientoCollection = medicamentos;
+    }
+
+    private async Task CaptureClickDolorSiete(MouseEventArgs e)
+    {
+        var position = await JSRuntime.InvokeAsync<EncuestaComunitaria.Models.DolorSieteDias>("getClickPosition", imageContainer7d, e.ClientX, e.ClientY);
+        position.PatientId = SinglePatient.Id;
+        position.TiempoSemanas = 0;
+        position.TiempoMeses = 0;
+        position.TiempoAnos = 0;
+        position.DolorPasoId = 0;
+        position.DolorPasoCausaId = 0;
+        position.DolorPasoCausaOtro = "";
+        position.DolorCuantoId = 0;
+        clicks7d.Add(position);
+
+        // Optionally, you can update your model here with the clicks
+        SinglePatient.DolorSieteDiasCollecion = clicks7d;
+    }
+
+    private async Task CaptureClickDolorHistorico(MouseEventArgs e)
+    {
+        var position = await JSRuntime.InvokeAsync<EncuestaComunitaria.Models.DolorHistoirico>("getClickPosition", imageContainerH, e.ClientX, e.ClientY);
+        position.TiempoSemanas = 0;
+        position.TiempoMeses = 0;
+        position.TiempoAnos = 0;
+        position.DolorPasoId = 0;
+        position.DolorPasoCausaId = 0;
+        position.DolorPasoCausaOtro = "";
+        position.DolorCuantoId = 0;
+        clicksH.Add(position);
+
+        // Optionally, you can update your model here with the clicks
+        SinglePatient.DolorHistoiricoCollecion = clicksH;
+    }
+
+    private void DeleteClick7d(int index)
+    {
+        if (index >= 0 && index < clicks7d.Count)
+        {
+            if (Id != null)
+            {
+                PatientService.DeleteDolorSieteAsync(SinglePatient.Id,clicks7d[index].Id);
+            }
+            clicks7d.RemoveAt(index);
+        }
+    }
+
+    private void DeleteClickH(int index)
+    {
+        if (index >= 0 && index < clicksH.Count)
+        {     
+            if (Id != null)
+            {
+                PatientService.DeleteDolorHistoricoAsync(SinglePatient.Id, clicksH[index].Id);
+            }
+            clicksH.RemoveAt(index);
+        }
+    }
+
+    private void DeleteTrabajos(int index)
+    {
+        if (index >= 0 && index < trabajos.Count)
+        {
+            if (Id != null)
+            {
+                PatientService.DeleteTrabajoAsync(SinglePatient.Id, trabajos[index].Id);
+            }
+            trabajos.RemoveAt(index);
+        }
+    }
+
+        private void Deletemedicamentos(int index)
+    {
+        if (index >= 0 && index < medicamentos.Count)
+        {
+            if (Id != null)
+            {
+                PatientService.DeleteMedicamentoTratamientoAsync(SinglePatient.Id, medicamentos[index].Id);
+            }
+            medicamentos.RemoveAt(index);
+        }
+    }
+
+
+    private void ActividadEspecificaSelectAnswer(int questionIndex, int answerIndex)
+    {
+        SinglePatient.ActividadEspecificaSA[questionIndex] = answerIndex;// Save the selected answer
+        if (questionIndex == 0)
+            SinglePatient.ActividadEspecifica1 = answerIndex;
+        if (questionIndex == 1)
+            SinglePatient.ActividadEspecifica2 = answerIndex;
+        if (questionIndex == 2)
+            SinglePatient.ActividadEspecifica3 = answerIndex;
+        if (questionIndex == 3)
+            SinglePatient.ActividadEspecifica4 = answerIndex;
+        if (questionIndex == 4)
+            SinglePatient.ActividadEspecifica5 = answerIndex;
+        if (questionIndex == 5)
+            SinglePatient.ActividadEspecifica6 = answerIndex;
+        if (questionIndex == 6)
+            SinglePatient.ActividadEspecifica7 = answerIndex;
+        if (questionIndex == 7)
+            SinglePatient.ActividadEspecifica8 = answerIndex;
+        if (questionIndex == 8)
+            SinglePatient.ActividadEspecifica9 = answerIndex;
+        if (questionIndex == 9)
+            SinglePatient.ActividadEspecifica10 = answerIndex;
+        if (questionIndex == 10)
+            SinglePatient.ActividadEspecifica11 = answerIndex;
+        if (questionIndex == 11)
+            SinglePatient.ActividadEspecifica12 = answerIndex;
+        if (questionIndex == 12)
+            SinglePatient.ActividadEspecifica13 = answerIndex;
+        if (questionIndex == 13)
+            SinglePatient.ActividadEspecifica14 = answerIndex;
+        if (questionIndex == 14)
+            SinglePatient.ActividadEspecifica15 = answerIndex;
+        if (questionIndex == 15)
+            SinglePatient.ActividadEspecifica16 = answerIndex;
+        if (questionIndex == 16)
+            SinglePatient.ActividadEspecifica17 = answerIndex;
+        if (questionIndex == 17)
+            SinglePatient.ActividadEspecifica18 = answerIndex;
+        if (questionIndex == 18)
+            SinglePatient.ActividadEspecifica19 = answerIndex;
+        if (questionIndex == 19)
+            SinglePatient.ActividadEspecifica20 = answerIndex;
+    }
+
+    private void LoadDificultadActividades()
+    {
+        if(SinglePatient.ActividadEspecifica1>0)
+            SinglePatient.ActividadEspecificaSA[0] = SinglePatient.ActividadEspecifica1;
+        if (SinglePatient.ActividadEspecifica2 > 0)
+                    SinglePatient.ActividadEspecificaSA[1] = SinglePatient.ActividadEspecifica2;
+        if (SinglePatient.ActividadEspecifica3 > 0)
+                    SinglePatient.ActividadEspecificaSA[2] = SinglePatient.ActividadEspecifica3;
+        if (SinglePatient.ActividadEspecifica4 > 0)
+                    SinglePatient.ActividadEspecificaSA[3] = SinglePatient.ActividadEspecifica4;
+        if (SinglePatient.ActividadEspecifica5 > 0)
+                    SinglePatient.ActividadEspecificaSA[4] = SinglePatient.ActividadEspecifica5;
+        if (SinglePatient.ActividadEspecifica6 > 0)
+                    SinglePatient.ActividadEspecificaSA[5] = SinglePatient.ActividadEspecifica6;    
+        if (SinglePatient.ActividadEspecifica7 > 0)
+                    SinglePatient.ActividadEspecificaSA[6] = SinglePatient.ActividadEspecifica7;
+        if (SinglePatient.ActividadEspecifica8 > 0)
+                    SinglePatient.ActividadEspecificaSA[7] = SinglePatient.ActividadEspecifica8;
+        if (SinglePatient.ActividadEspecifica9 > 0)
+                    SinglePatient.ActividadEspecificaSA[8] = SinglePatient.ActividadEspecifica9;
+        if (SinglePatient.ActividadEspecifica10 > 0)
+                    SinglePatient.ActividadEspecificaSA[9] = SinglePatient.ActividadEspecifica10;
+        if (SinglePatient.ActividadEspecifica11 > 0)
+                    SinglePatient.ActividadEspecificaSA[10] = SinglePatient.ActividadEspecifica11;
+        if (SinglePatient.ActividadEspecifica12 > 0)
+                    SinglePatient.ActividadEspecificaSA[11] = SinglePatient.ActividadEspecifica12;
+        if (SinglePatient.ActividadEspecifica13 > 0)
+                    SinglePatient.ActividadEspecificaSA[12] = SinglePatient.ActividadEspecifica13;
+        if (SinglePatient.ActividadEspecifica14 > 0)
+                    SinglePatient.ActividadEspecificaSA[13] = SinglePatient.ActividadEspecifica14;
+        if (SinglePatient.ActividadEspecifica15 > 0)
+                    SinglePatient.ActividadEspecificaSA[14] = SinglePatient.ActividadEspecifica15;
+        if (SinglePatient.ActividadEspecifica16 > 0)
+                    SinglePatient.ActividadEspecificaSA[15] = SinglePatient.ActividadEspecifica16;
+        if (SinglePatient.ActividadEspecifica17 > 0)
+                    SinglePatient.ActividadEspecificaSA[16] = SinglePatient.ActividadEspecifica17;
+        if (SinglePatient.ActividadEspecifica18 > 0)
+                    SinglePatient.ActividadEspecificaSA[17] = SinglePatient.ActividadEspecifica18;
+        if (SinglePatient.ActividadEspecifica19 > 0)
+                    SinglePatient.ActividadEspecificaSA[18] = SinglePatient.ActividadEspecifica19;
+        if (SinglePatient.ActividadEspecifica20 > 0)
+                    SinglePatient.ActividadEspecificaSA[19] = SinglePatient.ActividadEspecifica20;            
+    }
+}
