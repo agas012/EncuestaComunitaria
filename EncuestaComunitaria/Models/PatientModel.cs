@@ -720,6 +720,19 @@ namespace EncuestaComunitaria.Models
                 new KeyValuePair<string, int>("No", 2),
             };
         public int FamDejadoTrabajoId { get; set; }
+
+        public string EcoCuest1 = "Consultas con el médico";
+        public string EcoCuest2 = "Transporte para ir a su consulta";
+        public string EcoCuest3 = "Medicinas para sus enfermedades";
+        public string EcoCuest4 = "¿Cuántos días falta al trabajo?";
+        public int EcoCuest1Ans1 { get; set; }
+        public int EcoCuest1Ans2 { get; set; }
+        public int EcoCuest2Ans1 { get; set; }
+        public int EcoCuest2Ans2 { get; set; }
+        public int EcoCuest3Ans1 { get; set; }
+        public int EcoCuest3Ans2 { get; set; }
+        public int EcoCuest4Ans1 { get; set; }
+        public int EcoCuest4Ans2 { get; set; }
     }
 
     public class ActividadesEspecificas
@@ -830,7 +843,8 @@ namespace EncuestaComunitaria.Models
                 new KeyValuePair<string, int>("Ama de casa", 6),
                 new KeyValuePair<string, int>("Tallador de madera", 7),
                 new KeyValuePair<string, int>("Turismo", 8),
-                new KeyValuePair<string, int>("Otros. ¿Cuál?", 9),
+                new KeyValuePair<string, int>("Albañil/construcción", 9),
+                new KeyValuePair<string, int>("Otros. ¿Cuál?", 10),
             };
         public string NombreActividadString { get; set; } = string.Empty;
         public int NombreActividadId { get; set; }

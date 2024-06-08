@@ -825,25 +825,41 @@ else
             </RadzenCard>
             <RadzenCard Visible=@(SinglePatient.DejaHacerEId==1)>
                 <RadzenLabel Text="Si la respuesta es Sí, ¿Por cuánto tiempo?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.DejaHacerEId==1)/>
+                <p>
                 <RadzenLabel Text="días:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiDias" Name="DejaHacerSiDias" />
+                </p>
+                <p>
                 <RadzenLabel Text="semanas:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiSemanas" Name="DejaHacerSiSemanas" />
+                </p>
+                <p>
                 <RadzenLabel Text="meses:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiMeses" Name="DejaHacerSiMeses" />
+                </p>
+                <p>
                 <RadzenLabel Text="años:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiAnos" Name="DejaHacerSiAnos" />
+                </p>
             </RadzenCard>
             <RadzenCard Visible=@(SinglePatient.DejaHacerEId==3)>
                 <RadzenLabel Text="Si la respuesta es Hoy no pero antes Sí, ¿Por cuánto tiempo?" Size="H3" class="rz-card-title" Visible=@(SinglePatient.DejaHacerEId==1)/>
+                <p>
                 <RadzenLabel Text="días:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHDias" Name="DejaHacerSiHDias" />
+                </p>
+                <p>
                 <RadzenLabel Text="semanas:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHSemanas" Name="DejaHacerSiHSemanas" />
+                </p>
+                <p>
                 <RadzenLabel Text="meses:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHMeses" Name="DejaHacerSiHMeses" />
+                </p>
+                <p>
                 <RadzenLabel Text="años:" Size="H3" class="rz-card-title" />
                 <RadzenNumeric @bind-Value="SinglePatient.DejaHacerSiHAnos" Name="DejaHacerSiHAnos" />
+                </p>
             </RadzenCard>
         </RadzenCard>
     </RadzenCard>
@@ -1030,8 +1046,8 @@ else
                                             Data="@job.NombreActividad"
                                             Style="width: 100%">
                             </RadzenDropDown>
-                            <RadzenLabel Text="¿Cuál?" Size="H3" class="rz-card-title" Visible=@(job.NombreActividadId==9) />
-                            <RadzenTextBox @bind-Value="job.NombreActividadString" Name="NombreActividadString" Visible=@(job.NombreActividadId==9) />
+                            <RadzenLabel Text="¿Cuál?" Size="H3" class="rz-card-title" Visible=@(job.NombreActividadId==10) />
+                            <RadzenTextBox @bind-Value="job.NombreActividadString" Name="NombreActividadString" Visible=@(job.NombreActividadId==10) />
                         </td>
                     }
                 </tr>
@@ -1231,7 +1247,10 @@ else
 
     <RadzenCard Visible=@(sectioncount == 17)>
         <RadzenLabel Text="SECCIÓN L1. Medicamentos" Size="H6" class="rz-card-title" />
-        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1 || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_14)>
+        <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1
+                    || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_3 || SinglePatient.Comorbilidad_4 || SinglePatient.Comorbilidad_5 || SinglePatient.Comorbilidad_6
+                    || SinglePatient.Comorbilidad_7 || SinglePatient.Comorbilidad_8 || SinglePatient.Comorbilidad_9 || SinglePatient.Comorbilidad_10 || SinglePatient.Comorbilidad_11 || SinglePatient.Comorbilidad_12
+                    || SinglePatient.Comorbilidad_13 || SinglePatient.Comorbilidad_14)>
             <RadzenCard>
                 <RadzenLabel Text="Escribe todos los medicamentos o tratamientos que usas para tus enfermedades" Size="H3" class="rz-card-title" />
                 <RadzenLabel Text="presiona el boton para agregar mas medicamentos o tratamientos" Size="H3" class="rz-card-title" />
@@ -1575,7 +1594,7 @@ else
     </RadzenCard>
 
     <RadzenCard Visible=@(sectioncount == 20)>
-        <RadzenLabel Text="IMPACTO SOCIOECONÓMICO DE LAS ENFERMEDADES (con que pongan alguna enfermedad). Durante los últimos 12 meses" Size="H6" class="rz-card-title" />
+        <RadzenLabel Text="IMPACTO SOCIOECONÓMICO DE LAS ENFERMEDADES (con que pongan alguna enfermedad). Durante los últimos 6 meses" Size="H6" class="rz-card-title" />
         <RadzenCard Visible=@(SinglePatient.TenidoDolorSieteDiasId==1 || SinglePatient.TenidoDolorHistoiricoId==1
                     || SinglePatient.Comorbilidad_1 || SinglePatient.Comorbilidad_2 || SinglePatient.Comorbilidad_3 || SinglePatient.Comorbilidad_4 || SinglePatient.Comorbilidad_5 || SinglePatient.Comorbilidad_6
                     || SinglePatient.Comorbilidad_7 || SinglePatient.Comorbilidad_8 || SinglePatient.Comorbilidad_9 || SinglePatient.Comorbilidad_10 || SinglePatient.Comorbilidad_11 || SinglePatient.Comorbilidad_12
@@ -1660,6 +1679,44 @@ else
                     </RadzenDropDown>
                 </RadzenCard>
             </RadzenCard>
+
+
+            <RadzenCard>
+                <RadzenLabel Text="Considerando los que gastaba antes y después del proyecto de reumas y rehabilitación ¿cuánto ha ahorrado en las siguientes cosas?
+" Size="H3" class="rz-card-title" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Pregunta</th>
+                            <th>Antes del proyecto</th>
+                            <th>Después del proyecto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@SinglePatient.EcoCuest1</td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest1Ans1" /></td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest1Ans2" /></td>
+                        </tr> 
+                        <tr>
+                            <td>@SinglePatient.EcoCuest2</td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest2Ans1" /></td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest2Ans2" /></td>
+                        </tr>  
+                        <tr>
+                            <td>@SinglePatient.EcoCuest3</td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest3Ans1" /></td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest3Ans2" /></td>
+                        </tr>
+                        <tr>
+                            <td>@SinglePatient.EcoCuest4</td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest4Ans1" /></td>
+                            <td><input type="number" @bind="SinglePatient.EcoCuest4Ans2" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </RadzenCard>
+
         </RadzenCard>
     </RadzenCard>
 

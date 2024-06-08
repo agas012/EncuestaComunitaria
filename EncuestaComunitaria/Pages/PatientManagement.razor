@@ -22,6 +22,20 @@
 }
 else
 {
+<div class="search-bar">
+    <InputText @bind-Value="filterName" @oninput="ApplyFilters" placeholder="Nombre" />
+    <InputText @bind-Value="filterLastName1" @oninput="ApplyFilters" placeholder="Primer apellido" />
+    <InputText @bind-Value="filterLastName2" @oninput="ApplyFilters" placeholder="Segundo apellido" />
+    <InputNumber @bind-Value="filterAge" @oninput="ApplyFilters" placeholder="Age" />
+    <InputSelect @bind-Value="selectedLocation" @onchange="ApplyFilters" placeholder="Select Location">
+    @foreach (var location in uniqueLocations)
+        {
+            <option value="@location">@location</option>
+        }
+    </InputSelect>
+</div>
+<button @onclick="ApplyFilters">Buscar</button> 
+
 <table class="table custom-table">
     <thead class="custom-table-header">
         <tr>
@@ -29,6 +43,8 @@ else
             <th>Nombre</th>
             <th>Apellido paterno</th>
             <th>Apellido materno</th>
+            <th>Edad</th>
+            <th>Lugar de aplicacion</th>
             <th>Fecha captura</th>
             <th>Editar cuestionario</th>
             <th>Agregar enfermedades</th>
@@ -36,13 +52,15 @@ else
         </tr>
     </thead>
     <tbody>
-        @foreach (var patient in Patients)
+        @foreach (var patient in filteredPatients)
         {
             <tr>
                 <td>@patient.NombreEncuestador</td>
                 <td>@patient.Name</td>
                 <td>@patient.ApellidoP</td>
                 <td>@patient.ApellidoM</td>
+                <td>@patient.Edad</td>
+                <td>@patient.LugarAplicacion</td>
                 <td>@patient.FechaCaptura.ToShortDateString()</td>
                 <td>
                     <button @onclick="(() => ShowPatient(patient.Id))" class="btn btn-primary">Editar</button>
@@ -86,11 +104,23 @@ else
 
 
 @code {
+    private string filterName;
+    private string filterLastName1;
+    private string filterLastName2;
+    private int? filterAge;
+    private string selectedLocation;
+
+    public List<EncuestaComunitaria.Models.PatientModel> filteredPatients { get; set; } = new List<EncuestaComunitaria.Models.PatientModel>();
     public List<EncuestaComunitaria.Models.PatientModel> Patients { get; set; } = new List<EncuestaComunitaria.Models.PatientModel>();
+    private List<string> uniqueLocations = new List<string>(); // List to hold unique locations
+
 
     protected override async Task OnInitializedAsync()
     {
         Patients = await PatientService.GetPatientsAsync();
+        filteredPatients = Patients;
+        // Extract unique locations
+        uniqueLocations = Patients.Select(patient => patient.LugarAplicacion).Distinct().ToList();
     }
 
     void ShowPatient(int id)
@@ -126,4 +156,15 @@ else
     {
         PatientService.ReplaceDatabaseAsync();
     }    
+
+    private void ApplyFilters()
+    {
+        filteredPatients = Patients.Where(patient =>
+            (string.IsNullOrEmpty(filterName) || patient.Name.Contains(filterName, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(filterLastName1) || patient.ApellidoP.Contains(filterLastName1, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(filterLastName2) || patient.ApellidoM.Contains(filterLastName2, StringComparison.OrdinalIgnoreCase)) &&
+            (!filterAge.HasValue || patient.Edad == filterAge) &&
+            (string.IsNullOrEmpty(selectedLocation) || patient.LugarAplicacion == selectedLocation)
+        ).ToList();
+    }
 }

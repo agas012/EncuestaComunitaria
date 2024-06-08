@@ -118,8 +118,8 @@ a, .btn-link {
     border-collapse: collapse; /* Collapses the borders into single lines */
 }
 
-    .answers-table th, .answers-table td {
-        border: 1px solid black; /* Adds a border around each cell */
-        padding: 8px; /* Adds some padding inside each cell */
-        text-align: center;
-    }
+.answers-table th, .answers-table td {
+    border: 1px solid black; /* Adds a border around each cell */
+    padding: 8px; /* Adds some padding inside each cell */
+    text-align: center;
+}
